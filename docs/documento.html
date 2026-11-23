@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>BarberAgenda - Documentação do projeto</title>
+<!--
+    Documento do trabalho (fonte do PDF).
+    Para gerar o PDF de novo depois de editar: abra este arquivo no Chrome,
+    Ctrl+P > Destino "Salvar como PDF" > Mais definições > marque "Gráficos de plano de fundo".
+-->
+<style>
+    @page { size: A4; margin: 18mm 18mm 20mm 18mm; }
+
+    :root {
+        --ouro: #b8862b;
+        --ouro-claro: #f6ecd6;
+        --tinta: #1f1b16;
+        --suave: #5e564b;
+        --borda: #ddd3c2;
+        --fundo-quadro: #faf7f1;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-size: 10.5pt;
+        line-height: 1.5;
+        color: var(--tinta);
+    }
+
+    h1, h2, h3 { line-height: 1.2; color: var(--tinta); }
+    h2 {
+        font-size: 17pt;
+        margin: 0 0 10pt;
+        padding-bottom: 6pt;
+        border-bottom: 2px solid var(--ouro);
+        break-after: avoid;
+    }
+    h2 .num { color: var(--ouro); margin-right: 6pt; }
+    h3 { font-size: 12pt; margin: 16pt 0 6pt; break-after: avoid; }
+    p { margin: 0 0 8pt; text-align: justify; }
+    ul, ol { margin: 0 0 8pt; padding-left: 18pt; }
+    li { margin-bottom: 3pt; }
+    code { font-family: Consolas, monospace; font-size: 9pt; background: #f2ede4; padding: 0 3pt; border-radius: 3px; }
+
+    section { break-before: page; }
+    .junto { break-inside: avoid; }
+
+    /* ---------- Capa ---------- */
+    .capa {
+        height: 257mm;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 8mm 4mm 4mm;
+    }
+    .marca { display: flex; align-items: center; gap: 10pt; font-size: 15pt; font-weight: 700; }
+    .marca-icone {
+        width: 34pt; height: 34pt; border-radius: 8pt;
+        background: linear-gradient(135deg, #e9bd5f, #a87a26);
+        display: grid; place-items: center; font-size: 17pt; color: #1b1408;
+    }
+    .marca b { color: var(--ouro); }
+    .capa-titulo { margin-top: 40mm; }
+    .etiqueta {
+        display: inline-block; font-size: 9pt; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+        color: var(--ouro); background: var(--ouro-claro); padding: 3pt 9pt; border-radius: 20pt;
+    }
+    .capa h1 { font-size: 40pt; margin: 12pt 0 6pt; letter-spacing: -0.02em; }
+    .capa .subtitulo { font-size: 15pt; color: var(--suave); max-width: 140mm; text-align: left; }
+    .capa-dados { border-top: 2px solid var(--ouro); padding-top: 12pt; display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; }
+    .capa-dados h4 { margin: 0 0 4pt; font-size: 9pt; text-transform: uppercase; letter-spacing: .06em; color: var(--suave); }
+    .capa-dados p { margin: 0; text-align: left; }
+    .preencher { background: #fff3c4; padding: 0 3pt; border-radius: 3px; }
+
+    /* ---------- Blocos ---------- */
+    .quadro {
+        background: var(--fundo-quadro);
+        border: 1px solid var(--borda);
+        border-left: 4px solid var(--ouro);
+        border-radius: 6pt;
+        padding: 9pt 12pt;
+        margin: 10pt 0;
+        break-inside: avoid;
+    }
+    .quadro p:last-child, .quadro ul:last-child { margin-bottom: 0; }
+    .duas-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; }
+    .duas-colunas > div { break-inside: avoid; }
+
+    table { width: 100%; border-collapse: collapse; margin: 8pt 0 12pt; font-size: 9.5pt; break-inside: auto; }
+    th, td { border: 1px solid var(--borda); padding: 5pt 7pt; text-align: left; vertical-align: top; }
+    th { background: var(--ouro-claro); font-weight: 600; }
+    tr { break-inside: avoid; }
+    td.num, th.num { text-align: right; white-space: nowrap; }
+
+    figure { margin: 10pt 0 14pt; break-inside: avoid; }
+    figure img {
+        display: block; width: auto; max-width: 100%; max-height: 76mm; margin: 0 auto;
+        border: 1px solid var(--borda); border-radius: 6pt;
+    }
+    figure.menor img { max-height: 68mm; }
+    figcaption { font-size: 9pt; color: var(--suave); margin-top: 4pt; text-align: center; }
+    figure.diagrama { border: 1px solid var(--borda); border-radius: 6pt; padding: 6pt; background: #fff; }
+    figure.diagrama svg { width: 100%; max-width: 145mm; height: auto; display: block; margin: 0 auto; }
+
+    .com-celular { display: grid; grid-template-columns: 1fr 42mm; gap: 14pt; align-items: start; }
+    .com-celular figure img { max-height: none; width: 100%; }
+    .com-celular figure { margin-top: 0; }
+
+    .passos { counter-reset: passo; list-style: none; padding-left: 0; }
+    .passos > li { counter-increment: passo; padding-left: 24pt; margin-bottom: 6pt; }
+    .passos > li::before {
+        content: counter(passo);
+        display: inline-block; margin-left: -24pt; margin-right: 8pt;
+        width: 16pt; height: 16pt; line-height: 16pt; border-radius: 50%;
+        background: var(--ouro); color: #fff; font-size: 8.5pt; font-weight: 700;
+        text-align: center; vertical-align: 1pt;
+    }
+</style>
+</head>
+<body>
+
+<!-- =============================== CAPA =============================== -->
+<div class="capa">
+    <div class="marca"><span class="marca-icone">✂</span><span>Barber<b>Agenda</b></span></div>
+
+    <div class="capa-titulo">
+        <span class="etiqueta">Projeto de SaaS · MVP</span>
+        <h1>BarberAgenda</h1>
+        <p class="subtitulo">Sistema de agendamento online de cortes de cabelo para barbearias, oferecido pela internet por assinatura mensal.</p>
+    </div>
+
+    <div class="capa-dados">
+        <div>
+            <h4>Integrantes</h4>
+            <p>Marco Aurélio Orlandini Mendonça</p>
+            <p><span class="preencher">[Nome do integrante]</span></p>
+            <p><span class="preencher">[Nome do integrante]</span></p>
+        </div>
+        <div>
+            <h4>Repositório</h4>
+            <p><span class="preencher">[link do repositório no GitHub]</span></p>
+            <h4 style="margin-top:12pt">Data</h4>
+            <p>Novembro de 2026</p>
+        </div>
+    </div>
+</div>
+
+<!-- =============================== 1. VISÃO GERAL =============================== -->
+<section>
+    <h2><span class="num">1</span>Visão geral do projeto</h2>
+
+    <h3>1.1 O problema</h3>
+    <p>Em grande parte das barbearias o agendamento ainda é feito por mensagem de WhatsApp, ligação ou anotação em
+        caderno. Isso gera problemas que se repetem todos os dias:</p>
+    <ul>
+        <li>o barbeiro precisa <strong>interromper o atendimento</strong> para responder mensagens e conferir a agenda;</li>
+        <li>acontecem <strong>horários marcados em dobro</strong> e esquecimentos, porque a agenda fica em vários lugares;</li>
+        <li>o cliente só consegue marcar <strong>quando a barbearia responde</strong>, e muitos desistem;</li>
+        <li>as <strong>faltas</strong> não são controladas e o dono <strong>não sabe quanto faturou</strong> no mês nem quais serviços vendem mais.</li>
+    </ul>
+
+    <h3>1.2 Público-alvo</h3>
+    <div class="duas-colunas">
+        <div class="quadro">
+            <p><strong>Quem assina e paga pelo sistema</strong></p>
+            <p>Donos de barbearias pequenas e médias, com 1 a 10 barbeiros, que hoje controlam a agenda manualmente.</p>
+        </div>
+        <div class="quadro">
+            <p><strong>Quem usa no dia a dia</strong></p>
+            <p>Os <strong>clientes da barbearia</strong>, que agendam pelo celular sem criar conta, e os
+                <strong>barbeiros</strong>, que acompanham a agenda pelo painel.</p>
+        </div>
+    </div>
+
+    <h3>1.3 A proposta</h3>
+    <p>O <strong>BarberAgenda</strong> é um SaaS (<em>Software as a Service</em>): a barbearia não instala nada,
+        apenas cria uma conta no site e passa a usar o sistema pela internet, pagando uma mensalidade.
+        Cada barbearia cadastrada recebe um <strong>link próprio de agendamento</strong>
+        (por exemplo <code>/agendar.jsp?b=navalha-de-ouro</code>), que pode ser divulgado no Instagram e no WhatsApp.</p>
+    <p>Pelo link, o cliente escolhe o serviço, o barbeiro, o dia e um horário que <strong>realmente está livre</strong>.
+        O dono acompanha tudo em um painel com a agenda do dia, controle de faltas e relatórios de faturamento.
+        Esta entrega é o <strong>MVP</strong>: a primeira versão, com as funções essenciais para demonstrar a proposta.</p>
+
+    <h3>1.4 Principais funcionalidades</h3>
+    <div class="duas-colunas">
+        <div>
+            <p><strong>Para o cliente da barbearia</strong></p>
+            <ul>
+                <li>Página de agendamento da barbearia, que funciona no celular.</li>
+                <li>Escolha de serviço, barbeiro, dia e horário livre, uma pergunta por vez.</li>
+                <li><strong>Assistente com IA</strong>: o cliente marca, consulta ou cancela conversando no chat.</li>
+                <li>Cálculo automático dos horários disponíveis.</li>
+                <li>Confirmação com <strong>código do agendamento</strong>.</li>
+                <li>Consulta e cancelamento pelo código.</li>
+            </ul>
+        </div>
+        <div>
+            <p><strong>Para a barbearia (painel)</strong></p>
+            <ul>
+                <li>Cadastro da barbearia e login.</li>
+                <li>Agenda do dia com as ações <em>Concluir</em>, <em>Faltou</em> e <em>Cancelar</em>, e lembrete pelo WhatsApp.</li>
+                <li>Cadastro de serviços (duração e preço) e de barbeiros.</li>
+                <li>Horário e dias de funcionamento.</li>
+                <li>Relatórios do mês: faturamento, ticket médio, faltas e rankings.</li>
+                <li>Gestão do plano de assinatura.</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- =============================== 2. FLUXO =============================== -->
+<section>
+    <h2><span class="num">2</span>Fluxo completo da solução</h2>
+    <p>O fluxo principal do sistema é o agendamento feito pelo cliente, que aparece na hora no painel da barbearia.</p>
+
+    <ol class="passos">
+        <li><strong>O cliente abre o link da barbearia</strong> e responde uma pergunta por vez, começando pelo serviço.
+            Se preferir, toca em "Agendar conversando com o assistente" (seção 4).</li>
+    </ol>
+    <figure>
+        <img src="img/02-agendar-servico.jpg" alt="Escolha do serviço">
+        <figcaption>Figura 1: página de agendamento da barbearia, primeira pergunta.</figcaption>
+    </figure>
+
+    <ol class="passos" start="2" style="counter-reset: passo 1">
+        <li><strong>Cada escolha vira uma linha-resumo</strong> com o link "Trocar", e aparece só a próxima pergunta:
+            barbeiro e depois o dia. Os dias em que a barbearia está fechada aparecem riscados.</li>
+        <li><strong>O sistema mostra só os horários livres</strong> daquele barbeiro, considerando a duração do serviço.
+            Na figura, o serviço dura 1 hora e o barbeiro já tem um cliente das 10:00 às 11:00, então 09:30, 10:00 e 10:30 não aparecem.</li>
+        <li><strong>O cliente confere o resumo, informa nome e celular</strong> e confirma. Não precisa criar conta.</li>
+    </ol>
+    <figure>
+        <img src="img/03-agendar-horario.jpg" alt="Escolha do dia e do horário">
+        <figcaption>Figura 2: escolhas resumidas, horários livres calculados pelo sistema e dados do cliente.</figcaption>
+    </figure>
+</section>
+
+<section>
+    <ol class="passos" start="5" style="counter-reset: passo 4">
+        <li><strong>O agendamento é confirmado</strong> e o cliente recebe um código, que serve para consultar ou cancelar o horário.</li>
+    </ol>
+    <figure>
+        <img src="img/04-confirmacao.jpg" alt="Tela de confirmação">
+        <figcaption>Figura 3: confirmação do agendamento com o código.</figcaption>
+    </figure>
+
+    <ol class="passos" start="6" style="counter-reset: passo 5">
+        <li><strong>O dono vê o horário na agenda do painel.</strong> Cada atendimento é um cartão com uma faixa
+            colorida pela situação. Ao longo do dia ele marca cada um como concluído, falta ou cancelado. O valor
+            recebido e o previsto são calculados automaticamente, e o telefone do cliente é um link para enviar um
+            lembrete pelo WhatsApp.</li>
+    </ol>
+    <figure>
+        <img src="img/05-painel.jpg" alt="Painel da barbearia">
+        <figcaption>Figura 4: agenda do dia no painel da barbearia.</figcaption>
+    </figure>
+</section>
+
+<section>
+    <ol class="passos" start="7" style="counter-reset: passo 6">
+        <li><strong>No fim do mês, o dono acompanha os resultados</strong> na página de relatórios (recurso do plano Profissional).</li>
+    </ol>
+    <figure>
+        <img src="img/06-relatorios.jpg" alt="Relatórios">
+        <figcaption>Figura 5: relatório mensal com faturamento por dia, ticket médio, taxa de faltas e desempenho por barbeiro.</figcaption>
+    </figure>
+
+    <div class="quadro">
+        <p><strong>Regras de negócio garantidas pelo sistema</strong></p>
+        <ul>
+            <li>Um barbeiro nunca recebe dois clientes no mesmo horário, mesmo que os dois confirmem ao mesmo tempo.</li>
+            <li>O cliente só pode agendar dentro do horário de funcionamento e com até 14 dias de antecedência.</li>
+            <li>O cliente só cancela agendamentos que ainda não aconteceram, e o horário cancelado volta a ficar livre.</li>
+            <li>O valor do atendimento é gravado no momento do agendamento. Se o preço do serviço mudar depois, o histórico continua correto.</li>
+            <li>Serviços e barbeiros são <em>desativados</em>, não apagados, para não perder o histórico.</li>
+        </ul>
+    </div>
+</section>
+
+<!-- =============================== 3. ARQUITETURA =============================== -->
+<section>
+    <h2><span class="num">3</span>Arquitetura do sistema</h2>
+    <p>O sistema é uma aplicação web em Java que roda no servidor Apache Tomcat e guarda os dados no MySQL.
+        O código é organizado em <strong>três camadas</strong>: interface, lógica da aplicação e armazenamento.</p>
+
+    <figure class="diagrama">
+        <svg viewBox="0 0 700 470" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+            <defs>
+                <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path d="M0,0 L10,5 L0,10 z" fill="#8a6a2a"/>
+                </marker>
+            </defs>
+            <!-- Navegador -->
+            <rect x="150" y="10" width="400" height="60" rx="8" fill="#f6ecd6" stroke="#b8862b" stroke-width="1.5"/>
+            <text x="350" y="35" text-anchor="middle" font-size="15" font-weight="700" fill="#1f1b16">Navegador (HTML, CSS, JavaScript)</text>
+            <text x="350" y="56" text-anchor="middle" font-size="12" fill="#5e564b">Cliente agenda pelo celular · Dono da barbearia usa o painel</text>
+            <line x1="350" y1="70" x2="350" y2="132" stroke="#8a6a2a" stroke-width="1.8" marker-end="url(#seta)" marker-start="url(#seta)"/>
+            <text x="360" y="100" font-size="12" fill="#5e564b">HTTP: GET (páginas) / POST (formulários)</text>
+
+            <!-- Tomcat -->
+            <rect x="20" y="112" width="660" height="246" rx="10" fill="#faf7f1" stroke="#9a8f80" stroke-dasharray="6 4"/>
+            <text x="34" y="128" font-size="11" font-weight="700" fill="#5e564b">SERVIDOR APACHE TOMCAT 10.1 · JAVA 21</text>
+
+            <rect x="40" y="136" width="620" height="74" rx="8" fill="#ffffff" stroke="#b8862b" stroke-width="1.5"/>
+            <text x="58" y="158" font-size="14" font-weight="700" fill="#1f1b16">Interface: páginas JSP + ChatServlet (JSON)</text>
+            <text x="58" y="178" font-size="12" fill="#3d362e">index · cadastro · login · agendar (com o chat) · confirmacao · consultar · admin/ (agenda, serviços...)</text>
+            <text x="58" y="198" font-size="12" fill="#3d362e">Filtros: UTF-8 em todas as páginas · AuthFilter (exige login e confere o token CSRF)</text>
+
+            <line x1="350" y1="210" x2="350" y2="234" stroke="#8a6a2a" stroke-width="1.8" marker-end="url(#seta)"/>
+            <text x="360" y="227" font-size="11" fill="#5e564b">chamam métodos Java</text>
+
+            <rect x="40" y="236" width="620" height="108" rx="8" fill="#ffffff" stroke="#b8862b" stroke-width="1.5"/>
+            <text x="58" y="258" font-size="14" font-weight="700" fill="#1f1b16">Lógica da aplicação: classes Java</text>
+            <rect x="58" y="268" width="272" height="64" rx="6" fill="#f6ecd6" stroke="#d9c49a"/>
+            <text x="70" y="289" font-size="12.5" font-weight="700" fill="#1f1b16">service/ e ia/ · regras de negócio</text>
+            <text x="70" y="307" font-size="11.5" fill="#3d362e">AgendaService · GestaoService · ContaService</text>
+            <text x="70" y="323" font-size="11.5" fill="#3d362e">AssistenteIA · FerramentasIA (chat)</text>
+            <line x1="330" y1="300" x2="366" y2="300" stroke="#8a6a2a" stroke-width="1.8" marker-end="url(#seta)"/>
+            <rect x="370" y="268" width="272" height="64" rx="6" fill="#f6ecd6" stroke="#d9c49a"/>
+            <text x="382" y="289" font-size="12.5" font-weight="700" fill="#1f1b16">dao/ · acesso aos dados</text>
+            <text x="382" y="307" font-size="11.5" fill="#3d362e">AgendamentoDAO · ServicoDAO</text>
+            <text x="382" y="323" font-size="11.5" fill="#3d362e">BarbeiroDAO · RelatorioDAO · ...</text>
+
+            <line x1="506" y1="332" x2="506" y2="392" stroke="#8a6a2a" stroke-width="1.8" marker-end="url(#seta)" marker-start="url(#seta)"/>
+            <text x="516" y="376" font-size="11.5" fill="#5e564b">JDBC · PreparedStatement</text>
+            <line x1="194" y1="332" x2="194" y2="392" stroke="#8a6a2a" stroke-width="1.8" marker-end="url(#seta)" marker-start="url(#seta)"/>
+            <text x="204" y="376" font-size="11.5" fill="#5e564b">HTTPS · SDK Java</text>
+
+            <!-- Anthropic -->
+            <rect x="40" y="396" width="300" height="64" rx="8" fill="#efe9f7" stroke="#7a5ea8" stroke-width="1.5"/>
+            <text x="190" y="421" text-anchor="middle" font-size="14" font-weight="700" fill="#1f1b16">IA: API da Anthropic</text>
+            <text x="190" y="443" text-anchor="middle" font-size="12" fill="#3d362e">Managed Agents · modelo Claude Opus 5.5</text>
+
+            <!-- MySQL -->
+            <rect x="360" y="396" width="300" height="64" rx="8" fill="#e8f0f6" stroke="#4f7da3" stroke-width="1.5"/>
+            <text x="510" y="421" text-anchor="middle" font-size="14" font-weight="700" fill="#1f1b16">Armazenamento: MySQL 8</text>
+            <text x="510" y="443" text-anchor="middle" font-size="12" fill="#3d362e">barbearia · barbeiro · servico · agendamento ...</text>
+        </svg>
+        <figcaption>Figura 6: organização do sistema em camadas e comunicação entre as partes.</figcaption>
+    </figure>
+
+    <h3>3.1 Interface</h3>
+    <div class="com-celular">
+        <div>
+            <p>A interface é formada por <strong>páginas JSP</strong> (pasta <code>web/</code>) que geram HTML com os dados do banco.
+                Há duas áreas: a <strong>área pública</strong> (página do produto, cadastro, login, agendamento, confirmação e consulta)
+                e o <strong>painel administrativo</strong> (<code>web/admin/</code>), protegido por login.</p>
+            <p>Partes repetidas, como o cabeçalho e o menu do painel, ficam em fragmentos em <code>WEB-INF/jspf/</code>
+                e são incluídas com <code>&lt;%@include%&gt;</code>. O visual usa um único arquivo CSS, com layout
+                <strong>responsivo</strong> (grid, flexbox e <em>media queries</em>), já que a maioria dos clientes agenda pelo celular.
+                Um pouco de JavaScript melhora a usabilidade, com máscara de telefone e atualização automática dos horários,
+                mas o sistema também funciona sem ele.</p>
+        </div>
+        <figure>
+            <img src="img/09-celular.jpg" alt="Agendamento no celular">
+            <figcaption>Figura 7: agendamento no celular.</figcaption>
+        </figure>
+    </div>
+</section>
+
+<section>
+    <h3>3.2 Lógica da aplicação</h3>
+    <p>A lógica fica em classes Java (<code>src/java/br/com/barbearia</code>), separadas por responsabilidade:</p>
+    <table>
+        <tr><th style="width:22%">Pacote</th><th>Responsabilidade</th></tr>
+        <tr><td><code>model</code></td><td>Entidades do sistema (<code>Barbearia</code>, <code>Barbeiro</code>, <code>Servico</code>, <code>Agendamento</code>, <code>Usuario</code>) e os enums <code>Plano</code> e <code>StatusAgendamento</code>.</td></tr>
+        <tr><td><code>service</code></td><td>Regras de negócio: cálculo dos horários livres, confirmação do agendamento sem conflito, limites de cada plano e validações dos formulários.</td></tr>
+        <tr><td><code>dao</code></td><td>Acesso ao banco (padrão DAO). Cada classe faz o SQL de uma tabela usando <code>PreparedStatement</code>.</td></tr>
+        <tr><td><code>web</code></td><td>Filtros que rodam antes das páginas (UTF-8 e controle de login/CSRF) e o <em>listener</em> que lê a configuração do banco quando o Tomcat inicia.</td></tr>
+        <tr><td><code>util</code></td><td>Formatação no padrão brasileiro (data, moeda, telefone), hash de senha, token CSRF e proteção contra XSS.</td></tr>
+    </table>
+
+    <div class="quadro">
+        <p><strong>Como os horários livres são calculados</strong> (<code>AgendaService.gerarHorariosLivres</code>)</p>
+        <p>O sistema percorre o expediente de intervalo em intervalo (por exemplo, de 30 em 30 minutos). Para cada início
+            possível, calcula o fim (início + duração do serviço) e só oferece o horário se: (1) o serviço termina antes da
+            barbearia fechar; (2) o horário ainda não passou; e (3) não há sobreposição com outro atendimento do barbeiro.
+            Dois intervalos se sobrepõem quando <code>início &lt; fimOcupado</code> <strong>e</strong> <code>fim &gt; inícioOcupado</code>.</p>
+    </div>
+
+    <h3>3.3 Armazenamento dos dados</h3>
+    <p>Os dados ficam em um banco <strong>MySQL</strong> criado pelo script <code>database/barbearia.sql</code>.
+        Como é um SaaS, <strong>todas as barbearias usam o mesmo banco</strong>, e cada registro guarda o
+        <code>barbearia_id</code> de quem é o dono. Toda consulta filtra por esse campo, então uma barbearia nunca vê
+        nem altera os dados de outra.</p>
+
+    <figure class="diagrama">
+        <svg style="max-width:128mm" viewBox="0 0 700 350" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+            <g font-size="11" fill="#3d362e">
+                <!-- barbearia -->
+                <rect x="20" y="20" width="210" height="160" rx="6" fill="#fff" stroke="#b8862b" stroke-width="1.5"/>
+                <rect x="20" y="20" width="210" height="26" rx="6" fill="#f6ecd6" stroke="#b8862b" stroke-width="1.5"/>
+                <text x="125" y="38" text-anchor="middle" font-size="13" font-weight="700" fill="#1f1b16">barbearia</text>
+                <text x="32" y="64">id (PK)</text>
+                <text x="32" y="79">nome, telefone, endereço</text>
+                <text x="32" y="94">slug (link público, único)</text>
+                <text x="32" y="109">plano (BASICO / PROFISSIONAL)</text>
+                <text x="32" y="124">hora_abertura, hora_fechamento</text>
+                <text x="32" y="139">intervalo_min</text>
+                <text x="32" y="154">dias_funcionamento</text>
+
+                <!-- usuario -->
+                <rect x="20" y="230" width="210" height="110" rx="6" fill="#fff" stroke="#b8862b" stroke-width="1.5"/>
+                <rect x="20" y="230" width="210" height="26" rx="6" fill="#f6ecd6" stroke="#b8862b" stroke-width="1.5"/>
+                <text x="125" y="248" text-anchor="middle" font-size="13" font-weight="700" fill="#1f1b16">usuario</text>
+                <text x="32" y="274">id (PK), barbearia_id (FK)</text>
+                <text x="32" y="289">nome</text>
+                <text x="32" y="304">email (único)</text>
+                <text x="32" y="319">senha_hash (PBKDF2 + salt)</text>
+
+                <!-- barbeiro -->
+                <rect x="260" y="20" width="175" height="95" rx="6" fill="#fff" stroke="#b8862b" stroke-width="1.5"/>
+                <rect x="260" y="20" width="175" height="26" rx="6" fill="#f6ecd6" stroke="#b8862b" stroke-width="1.5"/>
+                <text x="347" y="38" text-anchor="middle" font-size="13" font-weight="700" fill="#1f1b16">barbeiro</text>
+                <text x="272" y="64">id (PK), barbearia_id (FK)</text>
+                <text x="272" y="79">nome</text>
+                <text x="272" y="94">ativo</text>
+
+                <!-- servico -->
+                <rect x="260" y="150" width="175" height="125" rx="6" fill="#fff" stroke="#b8862b" stroke-width="1.5"/>
+                <rect x="260" y="150" width="175" height="26" rx="6" fill="#f6ecd6" stroke="#b8862b" stroke-width="1.5"/>
+                <text x="347" y="168" text-anchor="middle" font-size="13" font-weight="700" fill="#1f1b16">servico</text>
+                <text x="272" y="194">id (PK), barbearia_id (FK)</text>
+                <text x="272" y="209">nome, descrição</text>
+                <text x="272" y="224">duracao_min</text>
+                <text x="272" y="239">preco</text>
+                <text x="272" y="254">ativo</text>
+
+                <!-- agendamento -->
+                <rect x="470" y="20" width="210" height="215" rx="6" fill="#fff" stroke="#b8862b" stroke-width="1.5"/>
+                <rect x="470" y="20" width="210" height="26" rx="6" fill="#f6ecd6" stroke="#b8862b" stroke-width="1.5"/>
+                <text x="575" y="38" text-anchor="middle" font-size="13" font-weight="700" fill="#1f1b16">agendamento</text>
+                <text x="482" y="64">id (PK), barbearia_id (FK)</text>
+                <text x="482" y="79">barbeiro_id (FK)</text>
+                <text x="482" y="94">servico_id (FK)</text>
+                <text x="482" y="109">cliente_nome, cliente_telefone</text>
+                <text x="482" y="124">data</text>
+                <text x="482" y="139">hora_inicio, hora_fim</text>
+                <text x="482" y="154">status (AGENDADO, CONCLUIDO,</text>
+                <text x="482" y="169">   CANCELADO, FALTOU)</text>
+                <text x="482" y="184">valor (preço na data)</text>
+                <text x="482" y="199">codigo (único)</text>
+                <text x="482" y="214">criado_em</text>
+            </g>
+            <g stroke="#8a6a2a" stroke-width="1.6" fill="none">
+                <line x1="125" y1="180" x2="125" y2="230"/>
+                <line x1="230" y1="67" x2="260" y2="67"/>
+                <path d="M230 160 L245 160 L245 212 L260 212"/>
+                <line x1="435" y1="67" x2="470" y2="67"/>
+                <path d="M435 212 L452 212 L452 120 L470 120"/>
+            </g>
+            <g font-size="10.5" font-weight="700" fill="#8a6a2a">
+                <text x="132" y="210">1 : N</text>
+                <text x="232" y="60">1:N</text>
+                <text x="210" y="200">1:N</text>
+                <text x="438" y="60">1:N</text>
+                <text x="456" y="180">1:N</text>
+            </g>
+        </svg>
+        <figcaption>Figura 8: modelo de dados. Cada agendamento liga um cliente a um barbeiro e a um serviço.</figcaption>
+    </figure>
+
+    <h3>3.4 Como as partes se comunicam</h3>
+    <p>O navegador conversa com o Tomcat por <strong>HTTP</strong>. As páginas JSP chamam as classes de serviço,
+        que usam os DAOs para ler e gravar no MySQL por <strong>JDBC</strong>. Um agendamento segue este caminho:</p>
+    <ol class="passos">
+        <li>O cliente escolhe serviço, barbeiro e dia. O navegador envia um <strong>GET</strong> para
+            <code>agendar.jsp?b=navalha-de-ouro&amp;servico=3&amp;barbeiro=2&amp;data=...</code>.</li>
+        <li><code>agendar.jsp</code> chama <code>AgendaService.horariosDisponiveis()</code>, que usa o <code>AgendamentoDAO</code>
+            para buscar no banco os horários já ocupados (<code>SELECT</code>) e calcula os horários livres.</li>
+        <li>O JSP devolve o HTML com os horários. O cliente escolhe um, preenche nome e celular e o navegador envia um <strong>POST</strong>.</li>
+        <li><code>AgendaService.agendar()</code> valida os dados, abre uma <strong>transação</strong>, trava o barbeiro
+            (<code>SELECT ... FOR UPDATE</code>), confere de novo se o horário está livre, grava com <code>INSERT</code> e faz <code>commit</code>.
+            Se algo falhar, faz <code>rollback</code>.</li>
+        <li>O servidor responde com um <strong>redirect</strong> para <code>confirmacao.jsp</code>. Assim, recarregar a página
+            não cria um segundo agendamento (padrão <em>Post/Redirect/Get</em>).</li>
+        <li>Quando o dono abre o painel, <code>admin/painel.jsp</code> consulta a mesma tabela e o novo horário aparece na agenda.</li>
+    </ol>
+
+    <h3>3.5 Tecnologias utilizadas e por que foram escolhidas</h3>
+    <table>
+        <tr><th style="width:26%">Tecnologia</th><th>Uso no projeto e justificativa</th></tr>
+        <tr><td>Java 21 + JSP / Servlets (Jakarta EE 10)</td><td>Linguagem e tecnologia web trabalhadas em aula. Permitem gerar páginas dinâmicas e separar a lógica em classes Java.</td></tr>
+        <tr><td>Apache Tomcat 10.1</td><td>Servidor que executa a aplicação Java web. É leve, gratuito e integrado ao NetBeans.</td></tr>
+        <tr><td>MySQL 8 + JDBC</td><td>Banco relacional para dados com relacionamentos claros (barbearia → barbeiros → agendamentos). Oferece transações e travas, essenciais para evitar horários em dobro.</td></tr>
+        <tr><td>API da Anthropic (Managed Agents) + SDK Java</td><td>IA do assistente de agendamento (modelo Claude Opus 5.5). O Managed Agents guarda as conversas e o "loop" do agente; o nosso servidor só executa as ferramentas no banco.</td></tr>
+        <tr><td>HTML, CSS e JavaScript</td><td>Interface sem frameworks, mais simples de entender e manter. O CSS responsivo garante o uso no celular.</td></tr>
+        <tr><td>NetBeans + Ant</td><td>IDE usada para compilar, empacotar (<code>.war</code>) e executar o projeto no Tomcat.</td></tr>
+        <tr><td>Git + GitHub</td><td>Controle de versão e entrega do código-fonte.</td></tr>
+    </table>
+</section>
+
+<!-- =============================== 4. ASSISTENTE COM IA =============================== -->
+<section>
+    <h2><span class="num">4</span>Assistente de agendamento com IA</h2>
+    <div class="com-celular">
+        <div>
+            <p>Além do agendamento pela página, o cliente pode <strong>conversar com um assistente</strong> que marca,
+                consulta e cancela horários. O cliente escreve como no WhatsApp ("quero cortar amanhã depois das 17h")
+                e o assistente pergunta o que falta, mostra os horários livres, confirma o resumo e faz o agendamento.</p>
+            <p>O assistente usa o modelo <strong>Claude Opus 5.5</strong> pela API da Anthropic, com o recurso
+                <strong>Managed Agents</strong>:</p>
+            <ol class="passos">
+                <li>O <strong>agente</strong> (modelo, instruções e ferramentas) é criado uma única vez na Anthropic.
+                    O ID fica guardado na tabela <code>config_ia</code>.</li>
+                <li>Cada conversa do site abre uma <strong>sessão</strong> desse agente.</li>
+                <li>O <code>ChatServlet</code> envia a mensagem do cliente e acompanha os eventos da sessão. Quando a IA
+                    pede uma ferramenta, o servidor a executa no MySQL e devolve o resultado. Quando a IA termina,
+                    a resposta volta para o chat em JSON.</li>
+            </ol>
+        </div>
+        <figure>
+            <img src="img/10-chat.jpg" alt="Assistente no celular">
+            <figcaption>Figura 9: assistente no celular.</figcaption>
+        </figure>
+    </div>
+
+    <h3>4.1 Ferramentas que a IA pode usar</h3>
+    <table>
+        <tr><th style="width:30%">Ferramenta</th><th>O que faz</th></tr>
+        <tr><td><code>ver_barbearia</code></td><td>Endereço, horário, dias de funcionamento e data de hoje.</td></tr>
+        <tr><td><code>listar_servicos</code> / <code>listar_barbeiros</code></td><td>Serviços com duração e preço; barbeiros ativos.</td></tr>
+        <tr><td><code>ver_horarios_livres</code></td><td>Horários livres de um serviço em um dia, por barbeiro. Usa o mesmo cálculo da página.</td></tr>
+        <tr><td><code>criar_agendamento</code></td><td>Marca o horário, só depois que o cliente confirma o resumo.</td></tr>
+        <tr><td><code>consultar_agendamento</code> / <code>cancelar_agendamento</code></td><td>Busca ou cancela pelo código do agendamento.</td></tr>
+    </table>
+
+    <div class="quadro">
+        <p><strong>Segurança e custo</strong></p>
+        <ul>
+            <li>A IA só <em>pede</em> ferramentas; quem executa é o servidor, com as regras da página. Ela não marca horário
+                ocupado nem vê outra barbearia, que vem da sessão do site, não da conversa.</li>
+            <li>A chave da API fica em <code>WEB-INF/ia.properties</code>, fora do Git. Sem ela, o chat mostra um aviso.</li>
+            <li>Limite de 40 mensagens por conversa. O custo é por uso (tokens e tempo de sessão) e deve ser medido
+                no Console da Anthropic antes de definir o preço.</li>
+        </ul>
+    </div>
+</section>
+
+<!-- =============================== 5. TÉCNICAS =============================== -->
+<section>
+    <h2><span class="num">5</span>Técnicas aplicadas</h2>
+    <p>A tabela mostra as principais técnicas usadas no projeto e onde cada uma pode ser vista no código.</p>
+    <table>
+        <tr><th style="width:27%">Técnica</th><th style="width:33%">Onde está no projeto</th><th>Para que serve</th></tr>
+        <tr><td>Páginas dinâmicas com JSP</td><td>Todas as páginas em <code>web/</code></td><td>Montar o HTML com dados vindos do banco.</td></tr>
+        <tr><td>Reaproveitamento com <code>include</code></td><td><code>WEB-INF/jspf/</code></td><td>Cabeçalho, rodapé e menu escritos uma vez só.</td></tr>
+        <tr><td>Formulários GET e POST</td><td><code>agendar.jsp</code>, <code>admin/*.jsp</code></td><td>GET para consultar e filtrar; POST para gravar dados.</td></tr>
+        <tr><td>Sessão (<code>HttpSession</code>)</td><td><code>login.jsp</code>, <code>AuthFilter</code>, <code>Flash</code></td><td>Manter o dono logado e mostrar mensagens após salvar.</td></tr>
+        <tr><td>JDBC com <code>PreparedStatement</code></td><td>Pacote <code>dao</code></td><td>Executar SQL com parâmetros, o que protege contra SQL injection.</td></tr>
+        <tr><td>CRUD completo</td><td>Serviços e barbeiros</td><td>Cadastrar, listar, editar e desativar registros.</td></tr>
+        <tr><td>Padrão DAO e camadas (MVC simplificado)</td><td><code>model</code>, <code>dao</code>, <code>service</code>, JSP</td><td>Separar tela, regra de negócio e acesso a dados.</td></tr>
+        <tr><td>Transações e trava de registro</td><td><code>AgendaService.agendar</code>, <code>ContaService.cadastrar</code></td><td>Gravar tudo ou nada e impedir agendamentos simultâneos no mesmo horário.</td></tr>
+        <tr><td>Consultas com JOIN, GROUP BY, SUM e COUNT</td><td><code>AgendamentoDAO</code>, <code>RelatorioDAO</code></td><td>Montar a agenda e os relatórios de faturamento.</td></tr>
+        <tr><td>Filtros e listener (Servlet API)</td><td>Pacote <code>web</code></td><td>Proteger <code>/admin/*</code>, forçar UTF-8 e ler a configuração do banco ao iniciar.</td></tr>
+        <tr><td>Post/Redirect/Get</td><td>Todas as ações de formulário</td><td>Evitar envio duplicado ao recarregar a página.</td></tr>
+        <tr><td>Segurança web</td><td><code>Seguranca</code>, <code>Csrf</code>, <code>Html</code></td><td>Senha com hash PBKDF2 + salt, token CSRF, escape contra XSS e senha do banco fora do código.</td></tr>
+        <tr><td>Layout responsivo</td><td><code>css/estilo.css</code></td><td>Uso confortável no celular e no computador.</td></tr>
+        <tr><td>Servlet com resposta JSON + <code>fetch</code></td><td><code>ChatServlet</code>, <code>js/chat.js</code></td><td>Chat que conversa com o servidor sem recarregar a página.</td></tr>
+        <tr><td>Integração com API externa (IA)</td><td>Pacote <code>ia</code></td><td>Assistente com ferramentas (<em>tool use</em>) que reaproveita as regras de negócio.</td></tr>
+        <tr><td>Multi-inquilino (SaaS)</td><td>Coluna <code>barbearia_id</code> em todas as tabelas</td><td>Várias barbearias no mesmo sistema, com dados isolados.</td></tr>
+    </table>
+</section>
+
+<!-- =============================== 6. MODELO DE NEGÓCIO =============================== -->
+<section>
+    <h2><span class="num">6</span>Como o sistema é oferecido aos clientes</h2>
+
+    <h3>6.1 Modelo de cobrança</h3>
+    <p>O BarberAgenda é vendido por <strong>assinatura mensal</strong>, sem fidelidade. O preço é cobrado da barbearia;
+        para o cliente final, agendar é gratuito.</p>
+    <table>
+        <tr><th>Plano</th><th class="num">Preço/mês</th><th>Barbeiros ativos</th><th>Relatórios</th><th>Indicado para</th></tr>
+        <tr><td><strong>Básico</strong></td><td class="num">R$ 49,90</td><td>até 2</td><td>não</td><td>Barbearia pequena começando a agenda online</td></tr>
+        <tr><td><strong>Profissional</strong></td><td class="num">R$ 89,90</td><td>ilimitados</td><td>sim</td><td>Barbearia com equipe que quer acompanhar resultados</td></tr>
+    </table>
+    <p>Os limites dos planos já funcionam no MVP: no plano Básico o sistema bloqueia o 3º barbeiro ativo e mostra
+        um convite para o plano Profissional no lugar dos relatórios. A troca de plano é feita pelo próprio dono, em
+        <em>Configurações → Ver ou mudar plano</em>.</p>
+    <figure class="menor">
+        <img src="img/08-plano.jpg" alt="Página Meu plano">
+        <figcaption>Figura 10: página "Meu plano", onde a barbearia troca de plano.</figcaption>
+    </figure>
+
+    <h3>6.2 Como a barbearia chega até o sistema</h3>
+    <ol class="passos">
+        <li><strong>Divulgação:</strong> página do produto (<code>index.jsp</code>), Instagram e parcerias com
+            distribuidores de produtos para barbearia.</li>
+        <li><strong>Cadastro sozinho (<em>self-service</em>):</strong> o dono cria a conta em poucos minutos e o sistema
+            já cria um barbeiro e dois serviços iniciais, para a barbearia sair usando.</li>
+        <li><strong>14 dias de teste grátis</strong>, para a barbearia ver o resultado antes de pagar.</li>
+        <li><strong>Cobrança recorrente automática</strong> por cartão de crédito ou Pix, através de um gateway de pagamento.
+            No MVP a troca de plano é registrada, mas nenhuma cobrança é feita.</li>
+    </ol>
+    <div class="quadro">
+        <p><strong>Exemplo de receita:</strong> 100 barbearias, sendo 70 no plano Básico e 30 no Profissional, geram
+            70 × R$ 49,90 + 30 × R$ 89,90 = <strong>R$ 6.190,00 por mês</strong>. Como todas usam o mesmo servidor e o mesmo
+            banco, o custo de cada nova barbearia é muito baixo.</p>
+    </div>
+</section>
+
+<!-- =============================== 7. IA NO DESENVOLVIMENTO =============================== -->
+<section>
+    <h2><span class="num">7</span>Uso de inteligência artificial no desenvolvimento</h2>
+
+    <h3>7.1 Ferramenta utilizada</h3>
+    <p><strong>Claude Code</strong> (Anthropic), um assistente de programação com inteligência artificial que trabalha
+        direto na pasta do projeto: lê e escreve arquivos, executa comandos, roda o sistema e testa as páginas no navegador.</p>
+
+    <h3>7.2 Etapas em que a IA ajudou</h3>
+    <table>
+        <tr><th style="width:24%">Etapa</th><th>Como a IA ajudou</th></tr>
+        <tr><td>Planejamento</td><td>Analisou o projeto feito em aula (CRUD em JSP + MySQL) para seguir as mesmas tecnologias, e propôs as funcionalidades do MVP e a organização em camadas.</td></tr>
+        <tr><td>Programação</td><td>Escreveu as classes Java (model, dao, service), as páginas JSP, o CSS e o JavaScript, a partir das decisões do grupo: tema, tecnologia e funcionalidades.</td></tr>
+        <tr><td>Banco de dados</td><td>Criou o script SQL com as tabelas, chaves estrangeiras e um mês de dados de demonstração.</td></tr>
+        <tr><td>Testes</td><td>Subiu o sistema num Tomcat de teste e testou o fluxo completo: agendamento, tentativa de horário duplicado, cancelamento, login, limites de plano, proteção CSRF e XSS. Também conferiu as telas no computador e no celular.</td></tr>
+        <tr><td>Correção de erros</td><td>Encontrou e corrigiu problemas durante os testes (exemplos abaixo).</td></tr>
+        <tr><td>Documentação</td><td>Escreveu o README do repositório e ajudou a montar este documento.</td></tr>
+    </table>
+
+    <h3>7.3 Exemplos concretos</h3>
+    <div class="quadro">
+        <p><strong>Exemplo 1: erro de acentuação encontrado no teste.</strong> Ao abrir o sistema no navegador, o ícone ✂
+            e o símbolo "·" do título apareciam como caracteres estranhos ("â", "Â·"). A IA identificou a causa: o
+            <code>web.xml</code> definia UTF-8 apenas para arquivos <code>*.jsp</code>, e os fragmentos incluídos
+            (<code>*.jspf</code>) eram lidos em ISO-8859-1. A correção foi incluir <code>*.jspf</code> na mesma configuração.</p>
+    </div>
+    <div class="quadro">
+        <p><strong>Exemplo 2: impedir dois clientes no mesmo horário.</strong> Conferir se o horário está livre e depois gravar
+            deixa uma brecha: dois clientes podem confirmar ao mesmo tempo e os dois passarem na verificação. A IA sugeriu fazer
+            a verificação e a gravação dentro de uma transação, travando o registro do barbeiro com <code>SELECT ... FOR UPDATE</code>.
+            No teste, a segunda tentativa de reservar o mesmo horário recebeu a mensagem "Esse horário acabou de ficar indisponível".</p>
+    </div>
+    <p>O grupo é responsável por todo o conteúdo entregue, inclusive as partes produzidas com auxílio da IA. Por isso,
+        o sistema foi executado e testado de ponta a ponta antes da entrega.</p>
+</section>
+
+<!-- =============================== 8. DIFICULDADES =============================== -->
+<section>
+    <h2><span class="num">8</span>Dificuldades e próximos passos</h2>
+
+    <h3>8.1 Principais dificuldades</h3>
+    <ul>
+        <li><strong>Calcular horários livres com serviços de durações diferentes:</strong> um corte de 30 minutos e um combo de
+            1 hora ocupam a agenda de forma diferente. Foi preciso verificar a sobreposição de intervalos, e não só comparar horários iguais.</li>
+        <li><strong>Evitar agendamentos duplicados</strong> quando dois clientes confirmam ao mesmo tempo, o que exigiu transação e trava no banco.</li>
+        <li><strong>Separar os dados de cada barbearia</strong> no mesmo banco: todas as consultas precisam filtrar por
+            <code>barbearia_id</code>, inclusive nas ações do painel.</li>
+        <li><strong>Acentuação (UTF-8)</strong> em páginas, formulários, fragmentos JSP e banco de dados.</li>
+        <li><strong>Interface boa no celular</strong>, já que o cliente agenda principalmente pelo telefone. Na segunda versão o
+            agendamento passou a mostrar uma pergunta por vez, o que deixou o fluxo mais curto.</li>
+        <li><strong>Usar IA com segurança</strong>: a IA não pode inventar horários nem agir fora das regras. A solução foi
+            deixá-la só pedir ferramentas, executadas pelo servidor com as mesmas validações da página.</li>
+    </ul>
+
+    <h3>8.2 Próximos passos</h3>
+    <ul>
+        <li>Lembrete automático por WhatsApp ou e-mail na véspera do horário, para reduzir faltas.</li>
+        <li>Levar o assistente para o WhatsApp da barbearia, usando as mesmas ferramentas.</li>
+        <li>Cobrança real da assinatura com gateway de pagamento (cartão e Pix recorrente).</li>
+        <li>Agenda individual por barbeiro, com folgas e horário de almoço.</li>
+        <li>Fidelidade de clientes (por exemplo, o 10º corte grátis) e avaliações após o atendimento.</li>
+        <li>Publicação em nuvem com domínio próprio e HTTPS.</li>
+    </ul>
+
+    <h3>8.3 Como executar</h3>
+    <ol>
+        <li>Executar <code>database/barbearia.sql</code> no MySQL. O script cria o banco com dados de demonstração.</li>
+        <li>Copiar <code>web/WEB-INF/db.properties.example</code> para <code>db.properties</code> e informar usuário e senha do MySQL.</li>
+        <li>Para ativar o assistente, copiar <code>web/WEB-INF/ia.properties.example</code> para <code>ia.properties</code> e colar a chave da API da Anthropic. Esse passo é opcional.</li>
+        <li>Abrir a pasta do projeto no NetBeans, fazer <em>Clean and Build</em> e <em>Run</em> no Tomcat 10.1.</li>
+        <li>Acessar <code>http://localhost:8080/SistemaBarbearia/</code>. Os dados de acesso de demonstração estão no README do repositório.</li>
+    </ol>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+<footer class="rodape">
+    <div class="container">
+        <span>© <%= java.time.Year.now() %> BarberAgenda · Agendamento online para barbearias</span>
+        <span>MVP acadêmico · Java (JSP) + MySQL</span>
+    </div>
+</footer>

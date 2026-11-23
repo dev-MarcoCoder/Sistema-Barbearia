@@ -1,0 +1,16 @@
+<%-- Cabecalho das paginas publicas. Depende da variavel ctx (definida em head.jspf). --%>
+<%
+    boolean logado = session.getAttribute("usuario") != null;
+%>
+<header class="topo">
+    <div class="container">
+        <a class="marca" href="<%= ctx %>/index.jsp"><span class="marca-icone" aria-hidden="true">✂</span><span>Barber<b>Agenda</b></span></a>
+        <nav class="nav" aria-label="Principal">
+            <% if (logado) { %>
+                <a class="btn btn-primario btn-pequeno" href="<%= ctx %>/admin/painel.jsp">Meu painel</a>
+            <% } else { %>
+                <a href="<%= ctx %>/login.jsp">Sou barbeiro</a>
+            <% } %>
+        </nav>
+    </div>
+</header>

@@ -1,0 +1,35 @@
+<%--
+    Cabecalho + menu lateral do painel. Abre <div class="admin"> e <main>, fechados em admin-fim.jspf.
+    Depende das variaveis: ctx, barbearia, usuarioLogado, paginaAtiva.
+--%>
+<%@page import="br.com.barbearia.util.Html"%>
+<%!
+    String itemMenu(String ctx, String pagina, String paginaAtiva, String icone, String texto) {
+        String classe = pagina.equals(paginaAtiva) ? " class=\"ativo\" aria-current=\"page\"" : "";
+        return "<a href=\"" + ctx + "/admin/" + pagina + ".jsp\"" + classe + "><span class=\"icone\" aria-hidden=\"true\">"
+                + icone + "</span>" + texto + "</a>";
+    }
+%>
+<header class="topo">
+    <div class="container" style="max-width:none">
+        <a class="marca" href="<%= ctx %>/admin/painel.jsp"><span class="marca-icone" aria-hidden="true">✂</span><span>Barber<b>Agenda</b></span></a>
+        <nav class="nav" aria-label="Conta">
+            <a href="<%= ctx %>/agendar.jsp?b=<%= Html.url(barbearia.getSlug()) %>" target="_blank" rel="noopener">Ver página de agendamento ↗</a>
+            <span class="suave pequeno">Olá, <%= Html.esc(usuarioLogado.getPrimeiroNome()) %></span>
+            <a href="<%= ctx %>/logout.jsp">Sair</a>
+        </nav>
+    </div>
+</header>
+<div class="admin">
+    <aside class="admin-menu">
+        <div class="barbearia-nome"><%= Html.esc(barbearia.getNome()) %></div>
+        <div class="plano-tag">Plano <%= Html.esc(barbearia.getPlano().getNome()) %></div>
+        <nav aria-label="Painel">
+            <%= itemMenu(ctx, "painel", paginaAtiva, "📅", "Agenda") %>
+            <%= itemMenu(ctx, "relatorios", paginaAtiva, "📊", "Relatórios") %>
+            <%= itemMenu(ctx, "servicos", paginaAtiva, "✂", "Serviços") %>
+            <%= itemMenu(ctx, "barbeiros", paginaAtiva, "💈", "Barbeiros") %>
+            <%= itemMenu(ctx, "configuracoes", "plano".equals(paginaAtiva) ? "configuracoes" : paginaAtiva, "⚙", "Configurações") %>
+        </nav>
+    </aside>
+    <main class="admin-conteudo">

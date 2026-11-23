@@ -1,0 +1,9 @@
+# Chave da API da Anthropic para o assistente de agendamento (chat com IA).
+#
+# 1. Crie uma chave em https://console.anthropic.com (menu API Keys).
+# 2. Copie este arquivo para ia.properties (na mesma pasta) e cole a chave abaixo.
+# 3. Reinicie a aplicação no Tomcat.
+#
+# O ia.properties está no .gitignore: a chave nunca vai para o repositório.
+# Sem a chave, o site funciona normalmente e o chat mostra um aviso.
+anthropic.api_key=

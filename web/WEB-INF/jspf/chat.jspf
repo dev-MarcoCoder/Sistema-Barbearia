@@ -1,0 +1,35 @@
+<%--
+    Janela do assistente com IA. Incluida na pagina de agendamento.
+    Depende das variaveis: ctx, barbearia, abrirChat.
+--%>
+<button class="chat-botao-flutuante" type="button" data-abrir-chat aria-label="Abrir o assistente de agendamento">💬 <span>Assistente</span></button>
+
+<section class="chat" id="chat" hidden aria-label="Assistente de agendamento"
+         data-url="<%= ctx %>/chat" data-barbearia="<%= Html.esc(barbearia.getSlug()) %>" data-abrir="<%= abrirChat %>">
+    <header class="chat-cabecalho">
+        <div>
+            <strong>Assistente · <%= Html.esc(barbearia.getNome()) %></strong>
+            <span>Marca, consulta e cancela horários</span>
+        </div>
+        <div class="chat-cabecalho-acoes">
+            <button type="button" class="chat-icone" data-nova-conversa title="Começar nova conversa" aria-label="Começar nova conversa">↺</button>
+            <button type="button" class="chat-icone" data-fechar-chat title="Fechar" aria-label="Fechar o assistente">✕</button>
+        </div>
+    </header>
+
+    <div class="chat-mensagens" aria-live="polite">
+        <div class="chat-msg chat-msg-ia">Oi! Sou o assistente da <%= Html.esc(barbearia.getNome()) %>. Posso marcar, consultar ou cancelar seu horário. Como posso ajudar?</div>
+        <div class="chat-sugestoes">
+            <button type="button" data-sugestao>Quero cortar o cabelo amanhã</button>
+            <button type="button" data-sugestao>Quais serviços e preços?</button>
+            <button type="button" data-sugestao>Quero cancelar meu horário</button>
+        </div>
+    </div>
+
+    <form class="chat-form" autocomplete="off">
+        <label class="visualmente-oculto" for="chat-texto">Mensagem para o assistente</label>
+        <input type="text" id="chat-texto" maxlength="1000" placeholder="Escreva sua mensagem..." required>
+        <button class="btn btn-primario" type="submit" aria-label="Enviar">➤</button>
+    </form>
+</section>
+<script src="<%= ctx %>/js/chat.js"></script>

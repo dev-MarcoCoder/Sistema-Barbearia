@@ -1,0 +1,21 @@
+# Build / saída do NetBeans + Ant
+/build/
+/dist/
+/nbproject/private/
+/nbproject/genfiles.properties
+
+# Artefatos
+*.war
+*.class
+
+# O driver do MySQL é versionado de propósito para o projeto rodar sem configuração extra
+!/web/WEB-INF/lib/*.jar
+
+# Sistema operacional / IDE
+.DS_Store
+Thumbs.db
+*.log
+
+# Configuração local do banco de dados e chave da API (não versionar)
+/web/WEB-INF/db.properties
+/web/WEB-INF/ia.properties

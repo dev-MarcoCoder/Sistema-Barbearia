@@ -1,0 +1,18 @@
+<%--
+    Incluido no topo de toda pagina do painel (/admin/*).
+    O AuthFilter ja garantiu que existe usuario logado; aqui carregamos a barbearia dele.
+    Disponibiliza as variaveis: usuarioLogado, barbearia.
+--%>
+<%@page import="br.com.barbearia.model.Usuario"%>
+<%@page import="br.com.barbearia.model.Barbearia"%>
+<%@page import="br.com.barbearia.dao.BarbeariaDAO"%>
+<%@page import="br.com.barbearia.web.AuthFilter"%>
+<%
+    Usuario usuarioLogado = (Usuario) session.getAttribute(AuthFilter.USUARIO);
+    Barbearia barbearia = new BarbeariaDAO().buscarPorId(usuarioLogado.getBarbeariaId());
+    if (barbearia == null) {
+        session.invalidate();
+        response.sendRedirect(request.getContextPath() + "/login.jsp");
+        return;
+    }
+%>
