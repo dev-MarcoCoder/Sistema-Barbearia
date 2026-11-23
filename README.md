@@ -16,8 +16,9 @@ O dono acompanha tudo em um painel com a agenda do dia, controle de faltas e rel
 
 ## Integrantes
 
-- Marco Aurélio Orlandini Mendonça
-- _(adicionar os demais integrantes do grupo)_
+- Marco Aurélio
+- Júlio Augusto
+- André Zerger
 
 ## Público-alvo
 
