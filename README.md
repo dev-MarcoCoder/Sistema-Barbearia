@@ -12,7 +12,7 @@ clientes faltam sem avisar e o dono não sabe quanto faturou no mês.
 serviço, o barbeiro, o dia e um horário que realmente está livre, sem precisar criar conta.
 O dono acompanha tudo em um painel com a agenda do dia, controle de faltas e relatórios.
 
-📄 Documentação completa do trabalho: [docs/BarberAgenda-Documentacao.pdf](docs/BarberAgenda-Documentacao.pdf)
+📄 [Documentação Final (PDF)](docs/Documenta%C3%A7%C3%A3o%20Final.pdf) · [Resumo da Apresentação (PDF)](docs/Resumo%20da%20Apresenta%C3%A7%C3%A3o.pdf)
 
 ## Integrantes
 

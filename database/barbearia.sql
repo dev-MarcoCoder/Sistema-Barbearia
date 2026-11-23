@@ -76,10 +76,3 @@ CREATE TABLE agendamento (
     INDEX idx_agenda_barbeiro (barbeiro_id, data),
     INDEX idx_agenda_barbearia (barbearia_id, data)
 );
-
--- IDs do agente e do ambiente do assistente de IA (Managed Agents da Anthropic).
--- O sistema preenche sozinho na primeira conversa; nao edite a mao.
-CREATE TABLE config_ia (
-    chave VARCHAR(50)  PRIMARY KEY,
-    valor VARCHAR(255) NOT NULL
-);

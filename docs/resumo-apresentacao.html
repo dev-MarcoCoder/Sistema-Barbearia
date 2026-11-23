@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Resumo da Apresentação - Sistema de Agendamento para Barbearias</title>
+<!-- Fonte do arquivo "Resumo da Apresentação.pdf" (Chrome > Ctrl+P > Salvar como PDF, com gráficos de plano de fundo). -->
+<link rel="stylesheet" href="documentos.css">
+<style>@page { margin: 13mm 17mm 16mm 17mm; }</style>
+</head>
+<body class="resumo">
+
+<div class="linha-info">
+    <span class="etiqueta">Tópicos Especiais em Informática · Resumo da apresentação</span>
+    <h1>Sistema de Agendamento para Barbearias</h1>
+    <p>Marco Aurélio · Júlio Augusto · André Zerger<br>
+        Site: <a href="https://meubarberagenda.duckdns.org">meubarberagenda.duckdns.org</a> ·
+        Código: <a href="https://github.com/dev-MarcoCoder/Sistema-Barbearia">github.com/dev-MarcoCoder/Sistema-Barbearia</a></p>
+</div>
+
+<h2>1. O projeto em uma frase</h2>
+<p>O <strong>BarberAgenda</strong> é um SaaS gratuito em que a barbearia ganha um link de agendamento e o cliente marca o corte
+    pelo celular ou <strong>conversando com uma IA</strong>, sem ligar e sem criar conta.</p>
+<p><strong>Problema:</strong> agenda por WhatsApp e caderno gera horário em dobro, faltas sem controle e nenhum dado de faturamento.
+    <strong>Público:</strong> barbearias pequenas e médias e seus clientes.</p>
+
+<h2>2. Funcionalidades</h2>
+<div class="duas-colunas">
+    <div>
+        <p><strong>Cliente</strong></p>
+        <ul>
+            <li>Agenda respondendo uma pergunta por vez.</li>
+            <li>Vê só os horários realmente livres.</li>
+            <li>Usa o chat com IA para marcar, consultar ou cancelar.</li>
+            <li>Recebe um código para consultar ou cancelar.</li>
+        </ul>
+    </div>
+    <div>
+        <p><strong>Barbearia</strong></p>
+        <ul>
+            <li>Agenda do dia: concluir, faltou, cancelar.</li>
+            <li>Lembrete pronto no WhatsApp.</li>
+            <li>Serviços, barbeiros e horário de funcionamento.</li>
+            <li>Relatórios: faturamento, faltas e rankings.</li>
+        </ul>
+    </div>
+</div>
+
+<h2>3. Tecnologias</h2>
+<table>
+    <tr><th style="width:27%">Tecnologia</th><th>Para que usamos</th></tr>
+    <tr><td><strong>Java 21, JSP e Servlets</strong></td><td>Páginas dinâmicas e regras do sistema.</td></tr>
+    <tr><td><strong>Apache Tomcat 10.1</strong></td><td>Servidor que executa a aplicação Java.</td></tr>
+    <tr><td><strong>MySQL + JDBC</strong></td><td>Guardar os dados, com transações e SQL com parâmetros.</td></tr>
+    <tr><td><strong>HTML, CSS e JavaScript</strong></td><td>Telas responsivas e o chat sem recarregar a página.</td></tr>
+    <tr><td><strong>OpenRouter + Claude Haiku 5.5</strong></td><td>Inteligência do assistente de agendamento.</td></tr>
+    <tr><td><strong>Docker, Caddy e AWS EC2</strong></td><td>Colocar o sistema no ar com HTTPS.</td></tr>
+    <tr><td><strong>NetBeans, Git e GitHub</strong></td><td>Desenvolver e trabalhar em equipe.</td></tr>
+</table>
+
+<h2>4. Como o sistema foi feito</h2>
+<ol class="passos">
+    <li><strong>Definição:</strong> escolhemos o problema das barbearias e a base em JSP + MySQL que já conhecíamos.</li>
+    <li><strong>Banco:</strong> tabelas <code>barbearia</code>, <code>usuario</code>, <code>barbeiro</code>, <code>servico</code> e <code>agendamento</code>.</li>
+    <li><strong>Lógica em camadas:</strong> telas (JSP), regras (<code>service</code>) e banco (<code>dao</code>).</li>
+    <li><strong>UX:</strong> o agendamento foi simplificado para uma pergunta por vez.</li>
+    <li><strong>Chat com IA:</strong> começou com a API da Anthropic e passou para o OpenRouter, com um modelo mais barato.</li>
+    <li><strong>Plano único e gratuito:</strong> tiramos os planos pagos da primeira versão.</li>
+    <li><strong>Testes e publicação:</strong> testes de uso e segurança e deploy na AWS.</li>
+</ol>
+
+<section>
+<h2 style="margin-top:0">5. Arquitetura</h2>
+<figure class="diagrama">
+    <svg viewBox="0 0 700 210" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial, sans-serif">
+        <defs><marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8a6a2a"/></marker></defs>
+        <rect x="10" y="70" width="130" height="70" rx="8" fill="#f6ecd6" stroke="#b8862b"/><text x="75" y="100" text-anchor="middle" font-size="14" font-weight="700">Navegador</text><text x="75" y="121" text-anchor="middle" font-size="11.5" fill="#5e564b">HTML, CSS, JS</text>
+        <rect x="205" y="15" width="270" height="180" rx="10" fill="#faf7f1" stroke="#9a8f80" stroke-dasharray="6 4"/><text x="220" y="35" font-size="11" font-weight="700" fill="#5e564b">TOMCAT · JAVA 21</text>
+        <rect x="222" y="46" width="236" height="38" rx="6" fill="#fff" stroke="#b8862b"/><text x="340" y="70" text-anchor="middle" font-size="13"><tspan font-weight="700">Interface:</tspan> JSP e ChatServlet</text>
+        <rect x="222" y="97" width="236" height="38" rx="6" fill="#fff" stroke="#b8862b"/><text x="340" y="121" text-anchor="middle" font-size="13"><tspan font-weight="700">Regras:</tspan> service e ia</text>
+        <rect x="222" y="148" width="236" height="38" rx="6" fill="#fff" stroke="#b8862b"/><text x="340" y="172" text-anchor="middle" font-size="13"><tspan font-weight="700">Dados:</tspan> dao</text>
+        <rect x="550" y="78" width="140" height="56" rx="8" fill="#efe9f7" stroke="#7a5ea8"/><text x="620" y="101" text-anchor="middle" font-size="13" font-weight="700">OpenRouter</text><text x="620" y="120" text-anchor="middle" font-size="11.5" fill="#5e564b">Claude Haiku 5.5</text>
+        <rect x="550" y="144" width="140" height="46" rx="8" fill="#e8f0f6" stroke="#4f7da3"/><text x="620" y="172" text-anchor="middle" font-size="13" font-weight="700">MySQL</text>
+        <g stroke="#8a6a2a" stroke-width="1.8"><line x1="141" y1="105" x2="204" y2="105" marker-end="url(#s)" marker-start="url(#s)"/><line x1="340" y1="84" x2="340" y2="96" marker-end="url(#s)"/><line x1="340" y1="135" x2="340" y2="147" marker-end="url(#s)"/><line x1="459" y1="110" x2="548" y2="106" marker-end="url(#s)" marker-start="url(#s)"/><line x1="459" y1="167" x2="548" y2="167" marker-end="url(#s)" marker-start="url(#s)"/></g>
+        <text x="172" y="96" text-anchor="middle" font-size="11" fill="#5e564b">HTTP</text><text x="512" y="98" text-anchor="middle" font-size="11" fill="#5e564b">JSON</text><text x="512" y="160" text-anchor="middle" font-size="11" fill="#5e564b">JDBC</text>
+    </svg>
+</figure>
+<p><strong>Multi-inquilino:</strong> todas as barbearias usam o mesmo sistema e o mesmo banco, separadas por <code>barbearia_id</code>.</p>
+
+<h2>6. APIs e serviços</h2>
+<table>
+    <tr><th style="width:30%">API ou serviço</th><th>O que faz</th></tr>
+    <tr><td><strong>OpenRouter</strong> (externa)</td><td>Recebe a conversa e as ferramentas em JSON e devolve a resposta do modelo.</td></tr>
+    <tr><td><strong><code>POST /chat</code></strong> (nossa)</td><td>O chat envia a mensagem e recebe <code>{ ok, resposta, agendamento }</code>.</td></tr>
+    <tr><td><strong>Servlet e JDBC</strong> (Java)</td><td>Sessões, filtros e acesso ao banco.</td></tr>
+    <tr><td><strong>Let's Encrypt e DuckDNS</strong></td><td>Certificado HTTPS e nome gratuito do site.</td></tr>
+    <tr><td><strong>WhatsApp (wa.me)</strong></td><td>Só um link com a mensagem pronta. Não há envio automático.</td></tr>
+</table>
+
+<h2>7. Duas partes para explicar bem</h2>
+<div class="duas-colunas">
+    <div class="quadro">
+        <p><strong>Horário sem conflito</strong></p>
+        <ul>
+            <li>Calcula os horários pela duração do serviço.</li>
+            <li>Ao confirmar, abre uma <strong>transação</strong> e trava o barbeiro (<code>SELECT ... FOR UPDATE</code>).</li>
+            <li>Confere de novo e grava.</li>
+            <li><strong>Teste:</strong> 12 pedidos ao mesmo tempo, 1 gravado e 11 recusados.</li>
+        </ul>
+    </div>
+    <div class="quadro">
+        <p><strong>Chat com IA</strong></p>
+        <ul>
+            <li>O servidor envia o histórico e <strong>7 ferramentas</strong>.</li>
+            <li>A IA <strong>pede</strong> uma ferramenta (<em>function calling</em>).</li>
+            <li>O <strong>servidor executa</strong> no MySQL e devolve o resultado.</li>
+            <li>A IA não acessa o banco nem burla as regras.</li>
+        </ul>
+    </div>
+</div>
+
+<h2>8. Segurança</h2>
+<p>Senha com hash PBKDF2 e salt · SQL com <code>PreparedStatement</code> · texto escapado contra XSS · token CSRF no painel ·
+    filtro de login · chaves e senhas fora do Git · HTTPS no site publicado.</p>
+
+<h2>9. Como é oferecido</h2>
+<p><strong>Grátis, com um único plano.</strong> Possibilidade de cobrança no futuro: uma taxa pequena por agendamento concluído
+    (por exemplo, R$ 0,50). Hoje nada é cobrado. Servidor: cerca de US$ 13 por mês, pagos com créditos da AWS.</p>
+
+<h2>10. IA no desenvolvimento</h2>
+<p>Usamos o <strong>Claude Code (Claude Opus 5.5)</strong> no planejamento, na programação, nos testes, no deploy e na documentação.
+    <strong>Exemplo:</strong> o ícone ✂ aparecia com caracteres estranhos, e a IA descobriu que os fragmentos <code>.jspf</code> não
+    estavam configurados em UTF-8.</p>
+</section>
+
+<section>
+<h2 style="margin-top:0">11. Dificuldades e próximos passos</h2>
+<div class="duas-colunas">
+    <div>
+        <p><strong>Dificuldades</strong></p>
+        <ul>
+            <li>Serviços com durações diferentes.</li>
+            <li>Dois clientes no mesmo horário.</li>
+            <li>Separar os dados de cada barbearia.</li>
+            <li>Usar IA com segurança e baixo custo.</li>
+            <li>Publicar em um servidor com pouca memória.</li>
+        </ul>
+    </div>
+    <div>
+        <p><strong>Próximos passos</strong></p>
+        <ul>
+            <li>Lembrete automático na véspera.</li>
+            <li>Assistente no WhatsApp da barbearia.</li>
+            <li>Folgas e horário de almoço por barbeiro.</li>
+            <li>Fidelidade e avaliações.</li>
+            <li>Domínio próprio e backup automático.</li>
+        </ul>
+    </div>
+</div>
+
+<h2>12. Roteiro da demonstração</h2>
+<ol class="passos">
+    <li>Mostrar a página inicial e escolher uma barbearia.</li>
+    <li>Agendar pela página: serviço, barbeiro, dia, horário e dados. Mostrar o código.</li>
+    <li>Voltar ao mesmo dia e mostrar que o horário <strong>sumiu</strong>.</li>
+    <li>Abrir o assistente e escrever: <em>"Quero cortar o cabelo amanhã à tarde"</em>.</li>
+    <li>Entrar no painel, mostrar o agendamento e clicar em <strong>Concluir</strong>.</li>
+    <li>Abrir os relatórios e mostrar o faturamento.</li>
+    <li>No GitHub, abrir <code>AgendaService.agendar</code> e <code>FerramentasIA</code>.</li>
+</ol>
+<div class="quadro">
+    <p><strong>Antes de começar:</strong> abrir o site e fazer login, testar o chat uma vez e deixar o projeto rodando localmente
+        (com uma barbearia cadastrada), caso a internet da sala falhe. O chat local precisa da chave e de internet.</p>
+</div>
+
+<h2>13. Perguntas que o professor pode fazer</h2>
+<div class="pergunta"><p><strong>Por que é um SaaS?</strong></p><p>Roda na internet, sem instalação, e várias barbearias usam o mesmo sistema com dados separados.</p></div>
+<div class="pergunta"><p><strong>Como evitam dois clientes no mesmo horário?</strong></p><p>Com transação e trava no barbeiro. O horário é conferido de novo antes de gravar.</p></div>
+<div class="pergunta"><p><strong>A IA pode inventar um horário?</strong></p><p>Ela pode errar no texto, mas não consegue gravar: o servidor valida e recusa horário que não está livre.</p></div>
+<div class="pergunta"><p><strong>A IA vê dados de outras barbearias?</strong></p><p>Não. As ferramentas usam a barbearia do link acessado, que a IA não pode escolher.</p></div>
+<div class="pergunta"><p><strong>O que é function calling?</strong></p><p>O modelo responde pedindo uma função com parâmetros. Nosso código executa e devolve o resultado para ele continuar.</p></div>
+<div class="pergunta"><p><strong>Onde ficam as senhas e a chave?</strong></p><p>Em arquivos ignorados pelo Git e, no servidor, em variáveis de ambiente. As senhas dos donos ficam como hash.</p></div>
+<div class="pergunta"><p><strong>Por que JSP, e não um framework?</strong></p><p>Já conhecíamos a base, e ela deixa visível o funcionamento de requisição, sessão, SQL e camadas.</p></div>
+<div class="pergunta"><p><strong>O que acontece se a IA sair do ar?</strong></p><p>O chat mostra um aviso, e o agendamento pela página continua funcionando.</p></div>
+</section>
+
+</body>
+</html>

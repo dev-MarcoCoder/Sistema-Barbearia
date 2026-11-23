@@ -1,0 +1,140 @@
+/* Estilo dos documentos em PDF (documentacao-final.html e resumo-apresentacao.html). */
+
+@page { size: A4; margin: 18mm 18mm 20mm 18mm; }
+
+:root {
+    --ouro: #b8862b;
+    --ouro-claro: #f6ecd6;
+    --tinta: #1f1b16;
+    --suave: #5e564b;
+    --borda: #ddd3c2;
+    --fundo-quadro: #faf7f1;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    color: var(--tinta);
+}
+
+h1, h2, h3 { line-height: 1.2; color: var(--tinta); }
+h2 {
+    font-size: 17pt;
+    margin: 0 0 10pt;
+    padding-bottom: 6pt;
+    border-bottom: 2px solid var(--ouro);
+    break-after: avoid;
+}
+h2 .num { color: var(--ouro); margin-right: 6pt; }
+h3 { font-size: 12pt; margin: 16pt 0 6pt; break-after: avoid; }
+p { margin: 0 0 8pt; text-align: justify; }
+ul, ol { margin: 0 0 8pt; padding-left: 18pt; }
+li { margin-bottom: 3pt; }
+code { font-family: Consolas, monospace; font-size: 9pt; background: #f2ede4; padding: 0 3pt; border-radius: 3px; }
+
+section { break-before: page; }
+.junto { break-inside: avoid; }
+
+/* ---------- Capa ---------- */
+.capa {
+    height: 257mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 8mm 4mm 4mm;
+}
+.marca { display: flex; align-items: center; gap: 10pt; font-size: 15pt; font-weight: 700; }
+.marca-icone {
+    width: 34pt; height: 34pt; border-radius: 8pt;
+    background: linear-gradient(135deg, #e9bd5f, #a87a26);
+    display: grid; place-items: center; font-size: 17pt; color: #1b1408;
+}
+.marca b { color: var(--ouro); }
+.capa-titulo { margin-top: 40mm; }
+.etiqueta {
+    display: inline-block; font-size: 9pt; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--ouro); background: var(--ouro-claro); padding: 3pt 9pt; border-radius: 20pt;
+}
+.capa h1 { font-size: 40pt; margin: 12pt 0 6pt; letter-spacing: -0.02em; }
+.capa .subtitulo { font-size: 15pt; color: var(--suave); max-width: 140mm; text-align: left; }
+.capa-dados { border-top: 2px solid var(--ouro); padding-top: 12pt; display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; }
+.capa-dados h4 { margin: 0 0 4pt; font-size: 9pt; text-transform: uppercase; letter-spacing: .06em; color: var(--suave); }
+.capa-dados p { margin: 0; text-align: left; }
+.preencher { background: #fff3c4; padding: 0 3pt; border-radius: 3px; }
+
+/* ---------- Blocos ---------- */
+.quadro {
+    background: var(--fundo-quadro);
+    border: 1px solid var(--borda);
+    border-left: 4px solid var(--ouro);
+    border-radius: 6pt;
+    padding: 9pt 12pt;
+    margin: 10pt 0;
+    break-inside: avoid;
+}
+.quadro p:last-child, .quadro ul:last-child { margin-bottom: 0; }
+.duas-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; }
+.duas-colunas > div { break-inside: avoid; }
+
+table { width: 100%; border-collapse: collapse; margin: 8pt 0 12pt; font-size: 9.5pt; break-inside: auto; }
+th, td { border: 1px solid var(--borda); padding: 5pt 7pt; text-align: left; vertical-align: top; }
+th { background: var(--ouro-claro); font-weight: 600; }
+tr { break-inside: avoid; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+
+figure { margin: 10pt 0 14pt; break-inside: avoid; }
+figure img {
+    display: block; width: auto; max-width: 100%; max-height: 76mm; margin: 0 auto;
+    border: 1px solid var(--borda); border-radius: 6pt;
+}
+figure.menor img { max-height: 68mm; }
+figcaption { font-size: 9pt; color: var(--suave); margin-top: 4pt; text-align: center; }
+figure.diagrama { border: 1px solid var(--borda); border-radius: 6pt; padding: 6pt; background: #fff; }
+figure.diagrama svg { width: 100%; max-width: 145mm; height: auto; display: block; margin: 0 auto; }
+
+.com-celular { display: grid; grid-template-columns: 1fr 42mm; gap: 14pt; align-items: start; }
+.com-celular figure img { max-height: none; width: 100%; }
+.com-celular figure { margin-top: 0; }
+
+.passos { counter-reset: passo; list-style: none; padding-left: 0; }
+.passos > li { counter-increment: passo; padding-left: 24pt; margin-bottom: 6pt; }
+.passos > li::before {
+    content: counter(passo);
+    display: inline-block; margin-left: -24pt; margin-right: 8pt;
+    width: 16pt; height: 16pt; line-height: 16pt; border-radius: 50%;
+    background: var(--ouro); color: #fff; font-size: 8.5pt; font-weight: 700;
+    text-align: center; vertical-align: 1pt;
+}
+
+/* ---------- Capa e sumario da Documentacao Final ---------- */
+.capa .disciplina { font-size: 13pt; color: var(--suave); margin: 0; text-align: left; }
+.capa h1 { font-size: 38pt; margin: 14pt 0 8pt; }
+.capa .projeto { font-size: 19pt; font-weight: 600; color: var(--ouro); margin: 0 0 8pt; text-align: left; line-height: 1.25; }
+.capa-dados .nomes p { font-size: 13pt; margin-bottom: 2pt; }
+.capa a, a { color: #7a5a17; }
+.sumario { list-style: none; padding: 0; margin: 0 0 16pt; }
+.sumario li { margin: 0; border-bottom: 1px dotted var(--borda); }
+.sumario a { display: flex; justify-content: space-between; padding: 5pt 2pt; color: var(--tinta); text-decoration: none; }
+.sumario .pg { color: var(--ouro); font-weight: 700; }
+
+/* ---------- Resumo da apresentacao ---------- */
+body.resumo { font-size: 9.7pt; line-height: 1.38; }
+body.resumo h1 { font-size: 22pt; margin: 4pt 0 2pt; }
+body.resumo h2 { font-size: 12.5pt; margin: 9pt 0 5pt; padding-bottom: 2pt; }
+body.resumo p { text-align: left; margin-bottom: 5pt; }
+body.resumo table { font-size: 9pt; margin: 5pt 0 8pt; }
+body.resumo th, body.resumo td { padding: 3.5pt 6pt; }
+body.resumo li { margin-bottom: 2pt; }
+body.resumo .passos > li { margin-bottom: 2pt; }
+body.resumo .quadro { margin: 4pt 0; padding: 7pt 10pt; }
+body.resumo figure.diagrama { margin: 6pt 0 8pt; }
+body.resumo figure.diagrama svg { max-width: 150mm; }
+.linha-info { color: var(--suave); border-bottom: 2px solid var(--ouro); padding-bottom: 8pt; }
+body.resumo .pergunta { break-inside: avoid; margin-bottom: 6pt; }
+body.resumo .pergunta p { margin: 0; }
