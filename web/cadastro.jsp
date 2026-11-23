@@ -46,7 +46,7 @@
 <main class="container">
     <div class="auth largo">
         <h1>Cadastre sua barbearia</h1>
-        <p class="suave">Comece no plano Básico com 14 dias grátis. Você pode mudar de plano quando quiser.</p>
+        <p class="suave">É grátis: sem mensalidade, sem cartão e sem limite de barbeiros.</p>
 
         <%= Flash.alerta("erro", erro) %>
 

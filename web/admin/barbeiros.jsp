@@ -1,11 +1,10 @@
 <%--
-    Equipe da barbearia. A quantidade de barbeiros ativos e limitada pelo plano.
+    Equipe da barbearia (sem limite de barbeiros).
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@include file="/WEB-INF/jspf/admin-init.jspf" %>
 <%@page import="java.util.List"%>
 <%@page import="br.com.barbearia.model.Barbeiro"%>
-<%@page import="br.com.barbearia.model.Plano"%>
 <%@page import="br.com.barbearia.dao.BarbeiroDAO"%>
 <%@page import="br.com.barbearia.service.GestaoService"%>
 <%@page import="br.com.barbearia.service.RegraNegocioException"%>
@@ -51,14 +50,6 @@
     }
 
     List<Barbeiro> barbeiros = barbeiroDAO.listar(barbearia.getId(), false);
-    int ativos = 0;
-    for (Barbeiro b : barbeiros) {
-        if (b.isAtivo()) {
-            ativos++;
-        }
-    }
-    Plano plano = barbearia.getPlano();
-    boolean noLimite = ativos >= plano.getLimiteBarbeiros();
     Barbeiro emEdicao = null;
     int editarId = Param.inteiro(request.getParameter("editar"), 0);
     if (editarId > 0) {
@@ -126,32 +117,16 @@
         </table>
     </div>
 
-    <div>
-        <div class="card">
-            <h3>Uso do plano</h3>
-            <div class="suave pequeno">Plano <%= Html.esc(plano.getNome()) %> · <%= Html.esc(plano.getLimiteBarbeirosTexto()) %></div>
-            <div class="stat-valor"><%= ativos %><span class="suave" style="font-size:1rem"><%= plano.barbeirosIlimitados() ? " ativos" : " de " + plano.getLimiteBarbeiros() %></span></div>
-            <% if (!plano.barbeirosIlimitados()) { %>
-                <div class="progresso"><div style="width:<%= Math.min(100, ativos * 100 / plano.getLimiteBarbeiros()) %>%"></div></div>
-            <% } %>
+    <form class="card" method="post" action="barbeiros.jsp">
+        <h3>Adicionar barbeiro</h3>
+        <%= Csrf.campo(session) %>
+        <input type="hidden" name="acao" value="adicionar">
+        <div class="campo">
+            <label for="nome">Nome</label>
+            <input type="text" id="nome" name="nome" required maxlength="100">
         </div>
-
-        <form class="card" method="post" action="barbeiros.jsp">
-            <h3>Adicionar barbeiro</h3>
-            <%= Csrf.campo(session) %>
-            <input type="hidden" name="acao" value="adicionar">
-            <% if (noLimite) { %>
-                <p class="suave">Você atingiu o limite do plano <%= Html.esc(plano.getNome()) %>.</p>
-                <a class="btn btn-primario btn-bloco" href="plano.jsp">Ver plano Profissional</a>
-            <% } else { %>
-                <div class="campo">
-                    <label for="nome">Nome</label>
-                    <input type="text" id="nome" name="nome" required maxlength="100">
-                </div>
-                <button class="btn btn-primario btn-bloco" type="submit">Adicionar</button>
-            <% } %>
-        </form>
-    </div>
+        <button class="btn btn-primario btn-bloco" type="submit">Adicionar</button>
+    </form>
 </div>
 
 <%@include file="/WEB-INF/jspf/admin-fim.jspf" %>

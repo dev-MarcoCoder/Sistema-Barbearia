@@ -1,7 +1,7 @@
 # BarberAgenda: agendamento online para barbearias (SaaS)
 
-O BarberAgenda é um **SaaS** (software oferecido pela internet, por assinatura mensal) que permite que
-barbearias recebam agendamentos de cortes de cabelo pela internet. Este repositório traz o **MVP**,
+O BarberAgenda é um **SaaS** (software oferecido pela internet), **gratuito e com um único plano**, que
+permite que barbearias recebam agendamentos de cortes de cabelo pela internet. Este repositório traz o **MVP**,
 a primeira versão com as funcionalidades essenciais para demonstrar a proposta.
 
 **O problema:** em muitas barbearias o agendamento ainda é feito por WhatsApp, ligação ou caderno.
@@ -22,13 +22,13 @@ O dono acompanha tudo em um painel com a agenda do dia, controle de faltas e rel
 
 ## Público-alvo
 
-- **Assinante (quem paga):** donos de barbearias pequenas e médias.
+- **Quem cadastra a barbearia:** donos de barbearias pequenas e médias.
 - **Usuário final:** clientes da barbearia, que agendam pelo celular sem precisar criar conta.
 
 ## Funcionalidades
 
 **Área pública (cliente da barbearia)**
-- Página inicial do SaaS com os planos e a lista de barbearias.
+- Página inicial com a lista de barbearias.
 - Página de agendamento de cada barbearia (`agendar.jsp?b=nome-da-barbearia`), com uma pergunta por vez:
   serviço → barbeiro → dia → horário livre → nome e celular.
 - **Assistente com IA** no chat da página: o cliente marca, consulta ou cancela conversando
@@ -44,21 +44,20 @@ O dono acompanha tudo em um painel com a agenda do dia, controle de faltas e rel
   e link para enviar lembrete ao cliente pelo WhatsApp.
 - Cadastro de **serviços** (nome, duração, preço) e de **barbeiros**, com desativação que preserva o histórico.
 - **Configurações**: dados da barbearia, horário de funcionamento, intervalo entre horários e dias de funcionamento.
-- **Relatórios do mês** (plano Profissional): faturamento, ticket médio, taxa de faltas,
-  faturamento por dia, serviços mais vendidos e desempenho por barbeiro.
-- **Meu plano**: troca entre os planos Básico e Profissional (cobrança simulada).
+- **Relatórios do mês**: faturamento, ticket médio, taxa de faltas, faturamento por dia,
+  serviços mais vendidos e desempenho por barbeiro.
 
-## Modelo de cobrança (SaaS)
+## Como o sistema é oferecido
 
-| Plano        | Preço/mês | Barbeiros  | Relatórios |
-|--------------|-----------|------------|------------|
-| Básico       | R$ 49,90  | até 2      | não        |
-| Profissional | R$ 89,90  | ilimitados | sim        |
+O BarberAgenda é **gratuito** e tem **um único plano**, igual para todas as barbearias:
 
-Os limites de cada plano são aplicados pelo próprio sistema. Por exemplo, o plano Básico bloqueia o
-3º barbeiro ativo e não libera os relatórios. Nesta versão a troca de plano não faz cobrança real;
-na versão comercial a mensalidade seria cobrada por cartão ou Pix recorrente através de um
-gateway de pagamento.
+- **Para a barbearia:** R$ 0. Não tem mensalidade, cartão ou limite de barbeiros, e tudo vem incluso
+  (link de agendamento, agenda, assistente com IA e relatórios).
+- **Para o cliente:** agenda de graça, sem criar conta, e paga o corte na barbearia.
+
+**Possibilidade de cobrança no futuro:** se for preciso cobrir os custos (servidor, banco e uso da API
+de IA), a ideia é manter o plano único e o cadastro grátis e cobrar uma taxa pequena por agendamento concluído,
+por exemplo R$ 0,50, paga por Pix no fim do mês. No MVP, nenhuma cobrança é feita.
 
 ## Tecnologias
 
@@ -82,7 +81,7 @@ Interface: páginas JSP (web/*.jsp, web/admin/*.jsp)
       │  chamam
       ▼
 Lógica: classes Java (src/java/br/com/barbearia)
-   service/  regras de negócio (horários livres, limites do plano, validações)
+   service/  regras de negócio (horários livres, validações)
    dao/      acesso ao banco com PreparedStatement
    model/    entidades (Barbearia, Barbeiro, Servico, Agendamento...)
    web/      filtros de login/UTF-8 e leitura da configuração do banco
@@ -121,8 +120,8 @@ ou pelo terminal:
 mysql -u root -p < database/barbearia.sql
 ```
 
-O script cria o banco `barbearia`, as tabelas e dados de demonstração: duas barbearias,
-um mês de histórico e agendamentos para hoje e amanhã.
+O script cria o banco `barbearia` com as tabelas **vazias**. A primeira barbearia é cadastrada pelo próprio
+site, em **Sou barbeiro → Cadastre sua barbearia**.
 
 > **Atenção:** o script apaga e recria o banco `barbearia` sempre que é executado.
 
@@ -164,14 +163,11 @@ Outra opção é copiar o `dist/SistemaBarbearia.war` gerado pelo *Clean and Bui
 
 Acesse: **http://localhost:8080/SistemaBarbearia/**
 
-### Contas de demonstração (apenas para teste local)
+### Dados de demonstração (opcional)
 
-| Barbearia                 | Plano        | E-mail                     | Senha      |
-|---------------------------|--------------|----------------------------|------------|
-| Navalha de Ouro Barbearia | Profissional | `admin@navalhadeouro.demo` | `demo1234` |
-| Barbearia do Bairro       | Básico       | `contato@dobairro.demo`    | `demo1234` |
-
-Página de agendamento de demonstração: `http://localhost:8080/SistemaBarbearia/agendar.jsp?b=navalha-de-ouro`
+Para testar sem cadastrar nada, rode também `database/dados-demonstracao.sql` **depois** do `barbearia.sql`.
+Ele cria duas barbearias fictícias, um mês de histórico e agendamentos para hoje e amanhã.
+Os logins de teste estão no começo do arquivo. Para começar do zero, não rode esse arquivo.
 
 ## Assistente com IA
 
@@ -193,20 +189,21 @@ O uso da API é cobrado por tokens e por tempo de sessão; acompanhe o custo no 
 ## Estrutura de pastas
 
 ```
-database/barbearia.sql           criação do banco + dados de demonstração
+database/barbearia.sql           criação do banco (tabelas vazias)
+database/dados-demonstracao.sql  dados fictícios para teste (opcional)
 src/java/br/com/barbearia/
-  model/                         entidades e enums (Plano, StatusAgendamento)
+  model/                         entidades e o enum StatusAgendamento
   dao/                           acesso a dados (JDBC)
   service/                       regras de negócio
   ia/                            assistente com IA (Managed Agents) e as ferramentas que ele usa
   util/                          formatação, segurança, CSRF, mensagens
   web/                           filtros (login, UTF-8), listener de inicialização e ChatServlet
 web/
-  index.jsp                      página do SaaS (planos, barbearias)
+  index.jsp                      página inicial (lista de barbearias)
   cadastro.jsp, login.jsp        onboarding e login do dono
   agendar.jsp                    fluxo de agendamento do cliente
   confirmacao.jsp, consultar.jsp confirmação, consulta e cancelamento
-  admin/                         painel: agenda, serviços, barbeiros, relatórios, configurações, plano
+  admin/                         painel: agenda, serviços, barbeiros, relatórios, configurações
   WEB-INF/jspf/                  trechos de layout reaproveitados (cabeçalho, menu, chat)
   css/, js/                      estilos e scripts
 ```
@@ -215,6 +212,6 @@ web/
 
 - Lembrete automático por WhatsApp/e-mail na véspera do horário.
 - Levar o assistente para o WhatsApp da barbearia, usando as mesmas ferramentas.
-- Cobrança real da assinatura com gateway de pagamento (cartão e Pix recorrente).
+- Se for preciso cobrir os custos, testar a taxa por agendamento concluído.
 - Agenda própria por barbeiro (folgas, horário de almoço).
 - Publicação em nuvem com domínio próprio.

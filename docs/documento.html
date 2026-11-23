@@ -131,7 +131,7 @@
     <div class="capa-titulo">
         <span class="etiqueta">Projeto de SaaS · MVP</span>
         <h1>BarberAgenda</h1>
-        <p class="subtitulo">Sistema de agendamento online de cortes de cabelo para barbearias, oferecido pela internet por assinatura mensal.</p>
+        <p class="subtitulo">Sistema de agendamento online de cortes de cabelo para barbearias, gratuito para as barbearias e para os clientes.</p>
     </div>
 
     <div class="capa-dados">
@@ -179,7 +179,7 @@
 
     <h3>1.3 A proposta</h3>
     <p>O <strong>BarberAgenda</strong> é um SaaS (<em>Software as a Service</em>): a barbearia não instala nada,
-        apenas cria uma conta no site e passa a usar o sistema pela internet, pagando uma mensalidade.
+        apenas cria uma conta no site e passa a usar o sistema pela internet, de graça.
         Cada barbearia cadastrada recebe um <strong>link próprio de agendamento</strong>
         (por exemplo <code>/agendar.jsp?b=navalha-de-ouro</code>), que pode ser divulgado no Instagram e no WhatsApp.</p>
     <p>Pelo link, o cliente escolhe o serviço, o barbeiro, o dia e um horário que <strong>realmente está livre</strong>.
@@ -207,7 +207,6 @@
                 <li>Cadastro de serviços (duração e preço) e de barbeiros.</li>
                 <li>Horário e dias de funcionamento.</li>
                 <li>Relatórios do mês: faturamento, ticket médio, faltas e rankings.</li>
-                <li>Gestão do plano de assinatura.</li>
             </ul>
         </div>
     </div>
@@ -263,7 +262,7 @@
 
 <section>
     <ol class="passos" start="7" style="counter-reset: passo 6">
-        <li><strong>No fim do mês, o dono acompanha os resultados</strong> na página de relatórios (recurso do plano Profissional).</li>
+        <li><strong>No fim do mês, o dono acompanha os resultados</strong> na página de relatórios.</li>
     </ol>
     <figure>
         <img src="img/06-relatorios.jpg" alt="Relatórios">
@@ -368,8 +367,8 @@
     <p>A lógica fica em classes Java (<code>src/java/br/com/barbearia</code>), separadas por responsabilidade:</p>
     <table>
         <tr><th style="width:22%">Pacote</th><th>Responsabilidade</th></tr>
-        <tr><td><code>model</code></td><td>Entidades do sistema (<code>Barbearia</code>, <code>Barbeiro</code>, <code>Servico</code>, <code>Agendamento</code>, <code>Usuario</code>) e os enums <code>Plano</code> e <code>StatusAgendamento</code>.</td></tr>
-        <tr><td><code>service</code></td><td>Regras de negócio: cálculo dos horários livres, confirmação do agendamento sem conflito, limites de cada plano e validações dos formulários.</td></tr>
+        <tr><td><code>model</code></td><td>Entidades do sistema (<code>Barbearia</code>, <code>Barbeiro</code>, <code>Servico</code>, <code>Agendamento</code>, <code>Usuario</code>) e o enum <code>StatusAgendamento</code>.</td></tr>
+        <tr><td><code>service</code></td><td>Regras de negócio: cálculo dos horários livres, confirmação do agendamento sem conflito e validações dos formulários.</td></tr>
         <tr><td><code>dao</code></td><td>Acesso ao banco (padrão DAO). Cada classe faz o SQL de uma tabela usando <code>PreparedStatement</code>.</td></tr>
         <tr><td><code>web</code></td><td>Filtros que rodam antes das páginas (UTF-8 e controle de login/CSRF) e o <em>listener</em> que lê a configuração do banco quando o Tomcat inicia.</td></tr>
         <tr><td><code>util</code></td><td>Formatação no padrão brasileiro (data, moeda, telefone), hash de senha, token CSRF e proteção contra XSS.</td></tr>
@@ -399,7 +398,7 @@
                 <text x="32" y="64">id (PK)</text>
                 <text x="32" y="79">nome, telefone, endereço</text>
                 <text x="32" y="94">slug (link público, único)</text>
-                <text x="32" y="109">plano (BASICO / PROFISSIONAL)</text>
+                <text x="32" y="109">criado_em</text>
                 <text x="32" y="124">hora_abertura, hora_fechamento</text>
                 <text x="32" y="139">intervalo_min</text>
                 <text x="32" y="154">dias_funcionamento</text>
@@ -536,8 +535,8 @@
             <li>A IA só <em>pede</em> ferramentas; quem executa é o servidor, com as regras da página. Ela não marca horário
                 ocupado nem vê outra barbearia, que vem da sessão do site, não da conversa.</li>
             <li>A chave da API fica em <code>WEB-INF/ia.properties</code>, fora do Git. Sem ela, o chat mostra um aviso.</li>
-            <li>Limite de 40 mensagens por conversa. O custo é por uso (tokens e tempo de sessão) e deve ser medido
-                no Console da Anthropic antes de definir o preço.</li>
+            <li>Limite de 40 mensagens por conversa. O custo da IA é por uso (tokens e tempo de sessão) e é
+                acompanhado no Console da Anthropic.</li>
         </ul>
     </div>
 </section>
@@ -571,21 +570,29 @@
 <section>
     <h2><span class="num">6</span>Como o sistema é oferecido aos clientes</h2>
 
-    <h3>6.1 Modelo de cobrança</h3>
-    <p>O BarberAgenda é vendido por <strong>assinatura mensal</strong>, sem fidelidade. O preço é cobrado da barbearia;
-        para o cliente final, agendar é gratuito.</p>
-    <table>
-        <tr><th>Plano</th><th class="num">Preço/mês</th><th>Barbeiros ativos</th><th>Relatórios</th><th>Indicado para</th></tr>
-        <tr><td><strong>Básico</strong></td><td class="num">R$ 49,90</td><td>até 2</td><td>não</td><td>Barbearia pequena começando a agenda online</td></tr>
-        <tr><td><strong>Profissional</strong></td><td class="num">R$ 89,90</td><td>ilimitados</td><td>sim</td><td>Barbearia com equipe que quer acompanhar resultados</td></tr>
-    </table>
-    <p>Os limites dos planos já funcionam no MVP: no plano Básico o sistema bloqueia o 3º barbeiro ativo e mostra
-        um convite para o plano Profissional no lugar dos relatórios. A troca de plano é feita pelo próprio dono, em
-        <em>Configurações → Ver ou mudar plano</em>.</p>
-    <figure class="menor">
-        <img src="img/08-plano.jpg" alt="Página Meu plano">
-        <figcaption>Figura 10: página "Meu plano", onde a barbearia troca de plano.</figcaption>
-    </figure>
+    <h3>6.1 Gratuito, com um único plano</h3>
+    <p>O BarberAgenda é <strong>gratuito</strong> e tem <strong>um único plano</strong>, igual para todas as barbearias:</p>
+    <div class="duas-colunas">
+        <div class="quadro">
+            <p><strong>Para a barbearia: R$ 0</strong></p>
+            <ul>
+                <li>Sem mensalidade, sem cartão de crédito e sem fidelidade.</li>
+                <li>Sem limite de barbeiros, serviços ou agendamentos.</li>
+                <li>Tudo incluso: link de agendamento, agenda do dia, assistente com IA e relatórios.</li>
+            </ul>
+        </div>
+        <div class="quadro">
+            <p><strong>Para o cliente da barbearia: R$ 0</strong></p>
+            <ul>
+                <li>Agenda sem criar conta.</li>
+                <li>Consulta e cancela pelo código do agendamento.</li>
+                <li>Paga o corte direto na barbearia, como sempre.</li>
+            </ul>
+        </div>
+    </div>
+    <p>Ser gratuito tira a principal barreira das barbearias pequenas, que costumam resistir a mais uma
+        mensalidade, e ajuda o sistema a ganhar usuários rapidamente. Com um plano só, não há tela de planos
+        nem limites para explicar: a barbearia se cadastra e já usa tudo.</p>
 
     <h3>6.2 Como a barbearia chega até o sistema</h3>
     <ol class="passos">
@@ -593,14 +600,19 @@
             distribuidores de produtos para barbearia.</li>
         <li><strong>Cadastro sozinho (<em>self-service</em>):</strong> o dono cria a conta em poucos minutos e o sistema
             já cria um barbeiro e dois serviços iniciais, para a barbearia sair usando.</li>
-        <li><strong>14 dias de teste grátis</strong>, para a barbearia ver o resultado antes de pagar.</li>
-        <li><strong>Cobrança recorrente automática</strong> por cartão de crédito ou Pix, através de um gateway de pagamento.
-            No MVP a troca de plano é registrada, mas nenhuma cobrança é feita.</li>
+        <li><strong>Divulgação do link:</strong> a própria barbearia coloca o link no Instagram e no WhatsApp, e cada
+            cliente que agenda conhece o sistema.</li>
     </ol>
+
+    <h3>6.3 Custos e uma possibilidade de cobrança no futuro</h3>
+    <p>Manter o sistema tem custos: servidor, banco de dados e o uso da API de IA, que é cobrado por mensagem.
+        Como todas as barbearias usam o mesmo servidor e o mesmo banco, o custo de cada nova barbearia é baixo.
+        O que mais cresce com o uso é o assistente com IA.</p>
     <div class="quadro">
-        <p><strong>Exemplo de receita:</strong> 100 barbearias, sendo 70 no plano Básico e 30 no Profissional, geram
-            70 × R$ 49,90 + 30 × R$ 89,90 = <strong>R$ 6.190,00 por mês</strong>. Como todas usam o mesmo servidor e o mesmo
-            banco, o custo de cada nova barbearia é muito baixo.</p>
+        <p><strong>Possibilidade de cobrança, mantendo um único plano:</strong> se for preciso cobrir os custos, a ideia
+            é manter o cadastro e o uso grátis e cobrar uma <strong>taxa pequena por agendamento concluído</strong>, por
+            exemplo R$ 0,50, somada no mês e paga por Pix. A barbearia só paga quando o sistema já trouxe cliente.
+            Exemplo: 300 atendimentos no mês = R$ 150,00. No MVP, nenhuma cobrança é feita.</p>
     </div>
 </section>
 
@@ -617,8 +629,8 @@
         <tr><th style="width:24%">Etapa</th><th>Como a IA ajudou</th></tr>
         <tr><td>Planejamento</td><td>Analisou o projeto feito em aula (CRUD em JSP + MySQL) para seguir as mesmas tecnologias, e propôs as funcionalidades do MVP e a organização em camadas.</td></tr>
         <tr><td>Programação</td><td>Escreveu as classes Java (model, dao, service), as páginas JSP, o CSS e o JavaScript, a partir das decisões do grupo: tema, tecnologia e funcionalidades.</td></tr>
-        <tr><td>Banco de dados</td><td>Criou o script SQL com as tabelas, chaves estrangeiras e um mês de dados de demonstração.</td></tr>
-        <tr><td>Testes</td><td>Subiu o sistema num Tomcat de teste e testou o fluxo completo: agendamento, tentativa de horário duplicado, cancelamento, login, limites de plano, proteção CSRF e XSS. Também conferiu as telas no computador e no celular.</td></tr>
+        <tr><td>Banco de dados</td><td>Criou o script SQL com as tabelas e chaves estrangeiras, e um script separado e opcional com dados fictícios para teste.</td></tr>
+        <tr><td>Testes</td><td>Subiu o sistema num Tomcat de teste e testou o fluxo completo: agendamento, tentativa de horário duplicado, cancelamento, login, proteção CSRF e XSS. Também conferiu as telas no computador e no celular.</td></tr>
         <tr><td>Correção de erros</td><td>Encontrou e corrigiu problemas durante os testes (exemplos abaixo).</td></tr>
         <tr><td>Documentação</td><td>Escreveu o README do repositório e ajudou a montar este documento.</td></tr>
     </table>
@@ -662,7 +674,7 @@
     <ul>
         <li>Lembrete automático por WhatsApp ou e-mail na véspera do horário, para reduzir faltas.</li>
         <li>Levar o assistente para o WhatsApp da barbearia, usando as mesmas ferramentas.</li>
-        <li>Cobrança real da assinatura com gateway de pagamento (cartão e Pix recorrente).</li>
+        <li>Se for preciso cobrir os custos, testar a taxa por agendamento concluído (seção 6.3).</li>
         <li>Agenda individual por barbeiro, com folgas e horário de almoço.</li>
         <li>Fidelidade de clientes (por exemplo, o 10º corte grátis) e avaliações após o atendimento.</li>
         <li>Publicação em nuvem com domínio próprio e HTTPS.</li>
@@ -670,11 +682,12 @@
 
     <h3>8.3 Como executar</h3>
     <ol>
-        <li>Executar <code>database/barbearia.sql</code> no MySQL. O script cria o banco com dados de demonstração.</li>
+        <li>Executar <code>database/barbearia.sql</code> no MySQL. O script cria o banco com as tabelas vazias.
+            Para testar com dados fictícios, rode também <code>database/dados-demonstracao.sql</code>, que é opcional.</li>
         <li>Copiar <code>web/WEB-INF/db.properties.example</code> para <code>db.properties</code> e informar usuário e senha do MySQL.</li>
         <li>Para ativar o assistente, copiar <code>web/WEB-INF/ia.properties.example</code> para <code>ia.properties</code> e colar a chave da API da Anthropic. Esse passo é opcional.</li>
         <li>Abrir a pasta do projeto no NetBeans, fazer <em>Clean and Build</em> e <em>Run</em> no Tomcat 10.1.</li>
-        <li>Acessar <code>http://localhost:8080/SistemaBarbearia/</code>. Os dados de acesso de demonstração estão no README do repositório.</li>
+        <li>Acessar <code>http://localhost:8080/SistemaBarbearia/</code> e cadastrar a primeira barbearia em <em>Sou barbeiro</em>.</li>
     </ol>
 </section>
 

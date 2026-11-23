@@ -53,16 +53,6 @@
 <%= Flash.exibir(session) %>
 <%= Flash.alerta("erro", erro) %>
 
-<div class="card plano-resumo" style="margin-bottom:20px">
-    <div>
-        <div class="suave pequeno">Seu plano</div>
-        <strong><%= Html.esc(barbearia.getPlano().getNome()) %></strong> ·
-        <%= Formato.moeda(barbearia.getPlano().getPrecoMensal()) %>/mês ·
-        <span class="suave"><%= Html.esc(barbearia.getPlano().getLimiteBarbeirosTexto()) %></span>
-    </div>
-    <a class="btn btn-secundario btn-pequeno" href="plano.jsp">Ver ou mudar plano</a>
-</div>
-
 <div class="grid grid-2">
     <form class="card" method="post" action="configuracoes.jsp">
         <h3>Dados da barbearia</h3>

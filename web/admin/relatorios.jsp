@@ -1,5 +1,5 @@
 <%--
-    Relatorios do mes (recurso do plano Profissional).
+    Relatorios do mes: faturamento, ticket medio, faltas e rankings.
 --%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@include file="/WEB-INF/jspf/admin-init.jspf" %>
@@ -17,7 +17,6 @@
 <%
     String tituloPagina = "Relatórios";
     String paginaAtiva = "relatorios";
-    boolean liberado = barbearia.getPlano().temRelatorios();
 
     YearMonth mes = Param.mes(request.getParameter("mes"));
     if (mes == null) {
@@ -26,21 +25,16 @@
     LocalDate inicio = mes.atDay(1);
     LocalDate fim = mes.atEndOfMonth();
 
-    ResumoPeriodo resumo = null;
-    List<ItemRanking> servicos = null;
-    List<ItemRanking> barbeiros = null;
+    RelatorioDAO dao = new RelatorioDAO();
+    ResumoPeriodo resumo = dao.resumo(barbearia.getId(), inicio, fim);
+    List<ItemRanking> servicos = dao.rankingServicos(barbearia.getId(), inicio, fim);
+    List<ItemRanking> barbeiros = dao.rankingBarbeiros(barbearia.getId(), inicio, fim);
     Map<String, BigDecimal> porDia = new HashMap<>();
     BigDecimal maiorDia = BigDecimal.ONE;
-    if (liberado) {
-        RelatorioDAO dao = new RelatorioDAO();
-        resumo = dao.resumo(barbearia.getId(), inicio, fim);
-        servicos = dao.rankingServicos(barbearia.getId(), inicio, fim);
-        barbeiros = dao.rankingBarbeiros(barbearia.getId(), inicio, fim);
-        for (ItemRanking dia : dao.faturamentoPorDia(barbearia.getId(), inicio, fim)) {
-            porDia.put(dia.getNome(), dia.getValor());
-            if (dia.getValor().compareTo(maiorDia) > 0) {
-                maiorDia = dia.getValor();
-            }
+    for (ItemRanking dia : dao.faturamentoPorDia(barbearia.getId(), inicio, fim)) {
+        porDia.put(dia.getNome(), dia.getValor());
+        if (dia.getValor().compareTo(maiorDia) > 0) {
+            maiorDia = dia.getValor();
         }
     }
 %>
@@ -57,23 +51,12 @@
         <h1>Relatórios</h1>
         <p class="suave sem-margem">Resultado da barbearia em <%= Html.esc(Formato.mesAno(inicio)) %>.</p>
     </div>
-    <% if (liberado) { %>
     <div class="navegacao-data" style="margin:0">
         <a class="btn btn-secundario btn-pequeno" href="relatorios.jsp?mes=<%= mes.minusMonths(1) %>">← Mês anterior</a>
         <a class="btn btn-secundario btn-pequeno" href="relatorios.jsp">Mês atual</a>
         <a class="btn btn-secundario btn-pequeno" href="relatorios.jsp?mes=<%= mes.plusMonths(1) %>">Próximo →</a>
     </div>
-    <% } %>
 </div>
-
-<% if (!liberado) { %>
-    <div class="card upsell">
-        <div class="passo-numero" style="margin:0 auto 16px">📊</div>
-        <h2>Relatórios fazem parte do plano Profissional</h2>
-        <p class="suave">Veja faturamento por dia, ticket médio, taxa de faltas, serviços mais vendidos e o desempenho de cada barbeiro.</p>
-        <a class="btn btn-primario" href="plano.jsp">Conhecer o plano Profissional</a>
-    </div>
-<% } else { %>
 
 <div class="stats">
     <div class="stat"><div class="stat-rotulo">Faturamento</div><div class="stat-valor dourado"><%= Formato.moeda(resumo.getFaturado()) %></div></div>
@@ -137,7 +120,6 @@
            } %>
     </div>
 </div>
-<% } %>
 
 <%@include file="/WEB-INF/jspf/admin-fim.jspf" %>
 </body>

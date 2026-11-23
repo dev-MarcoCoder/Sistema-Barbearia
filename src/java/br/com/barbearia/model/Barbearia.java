@@ -6,8 +6,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Barbearia cliente do SaaS (o "inquilino"). Todos os outros dados
+ * Barbearia que usa o sistema (o "inquilino"). Todos os outros dados
  * (barbeiros, servicos, agendamentos) pertencem a uma barbearia.
+ * O uso e gratuito: nao ha planos nem limites por barbearia.
  */
 public class Barbearia {
 
@@ -16,7 +17,6 @@ public class Barbearia {
     private String slug;
     private String telefone;
     private String endereco;
-    private Plano plano = Plano.BASICO;
     private LocalTime horaAbertura = LocalTime.of(9, 0);
     private LocalTime horaFechamento = LocalTime.of(19, 0);
     private int intervaloMin = 30;
@@ -65,8 +65,6 @@ public class Barbearia {
     public void setTelefone(String telefone) { this.telefone = telefone; }
     public String getEndereco() { return endereco; }
     public void setEndereco(String endereco) { this.endereco = endereco; }
-    public Plano getPlano() { return plano; }
-    public void setPlano(Plano plano) { this.plano = plano; }
     public LocalTime getHoraAbertura() { return horaAbertura; }
     public void setHoraAbertura(LocalTime horaAbertura) { this.horaAbertura = horaAbertura; }
     public LocalTime getHoraFechamento() { return horaFechamento; }

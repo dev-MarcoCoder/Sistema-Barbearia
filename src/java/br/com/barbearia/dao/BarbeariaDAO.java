@@ -1,7 +1,6 @@
 package br.com.barbearia.dao;
 
 import br.com.barbearia.model.Barbearia;
-import br.com.barbearia.model.Plano;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,7 +12,7 @@ import java.util.List;
 
 public class BarbeariaDAO {
 
-    private static final String COLUNAS = "id, nome, slug, telefone, endereco, plano, hora_abertura, "
+    private static final String COLUNAS = "id, nome, slug, telefone, endereco, hora_abertura, "
             + "hora_fechamento, intervalo_min, dias_funcionamento";
 
     public Barbearia buscarPorId(int id) throws SQLException {
@@ -62,18 +61,17 @@ public class BarbeariaDAO {
 
     /** Insere usando a conexao recebida (para participar de uma transacao). */
     public int inserir(Connection c, Barbearia b) throws SQLException {
-        String sql = "INSERT INTO barbearia (nome, slug, telefone, endereco, plano, hora_abertura, hora_fechamento, "
-                + "intervalo_min, dias_funcionamento) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO barbearia (nome, slug, telefone, endereco, hora_abertura, hora_fechamento, "
+                + "intervalo_min, dias_funcionamento) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, b.getNome());
             ps.setString(2, b.getSlug());
             ps.setString(3, b.getTelefone());
             ps.setString(4, b.getEndereco());
-            ps.setString(5, b.getPlano().name());
-            ps.setObject(6, b.getHoraAbertura());
-            ps.setObject(7, b.getHoraFechamento());
-            ps.setInt(8, b.getIntervaloMin());
-            ps.setString(9, b.getDiasFuncionamentoTexto());
+            ps.setObject(5, b.getHoraAbertura());
+            ps.setObject(6, b.getHoraFechamento());
+            ps.setInt(7, b.getIntervaloMin());
+            ps.setString(8, b.getDiasFuncionamentoTexto());
             ps.executeUpdate();
             try (ResultSet chaves = ps.getGeneratedKeys()) {
                 chaves.next();
@@ -109,15 +107,6 @@ public class BarbeariaDAO {
         }
     }
 
-    public void atualizarPlano(int barbeariaId, Plano plano) throws SQLException {
-        try (Connection c = ConnectionFactory.getConnection();
-             PreparedStatement ps = c.prepareStatement("UPDATE barbearia SET plano = ? WHERE id = ?")) {
-            ps.setString(1, plano.name());
-            ps.setInt(2, barbeariaId);
-            ps.executeUpdate();
-        }
-    }
-
     private Barbearia montar(ResultSet rs) throws SQLException {
         Barbearia b = new Barbearia();
         b.setId(rs.getInt("id"));
@@ -125,8 +114,6 @@ public class BarbeariaDAO {
         b.setSlug(rs.getString("slug"));
         b.setTelefone(rs.getString("telefone"));
         b.setEndereco(rs.getString("endereco"));
-        Plano plano = Plano.deTexto(rs.getString("plano"));
-        b.setPlano(plano == null ? Plano.BASICO : plano);
         b.setHoraAbertura(rs.getObject("hora_abertura", LocalTime.class));
         b.setHoraFechamento(rs.getObject("hora_fechamento", LocalTime.class));
         b.setIntervaloMin(rs.getInt("intervalo_min"));

@@ -7,7 +7,6 @@ import br.com.barbearia.dao.ServicoDAO;
 import br.com.barbearia.dao.UsuarioDAO;
 import br.com.barbearia.model.Barbearia;
 import br.com.barbearia.model.Barbeiro;
-import br.com.barbearia.model.Plano;
 import br.com.barbearia.model.Servico;
 import br.com.barbearia.model.Usuario;
 import br.com.barbearia.util.Param;
@@ -80,7 +79,6 @@ public class ContaService {
                 b.setSlug(gerarSlugUnico(c, nomeB));
                 b.setTelefone(fone);
                 b.setEndereco(end);
-                b.setPlano(Plano.BASICO);
                 barbeariaDAO.inserir(c, b);
 
                 Usuario u = new Usuario();

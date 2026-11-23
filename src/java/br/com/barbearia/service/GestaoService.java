@@ -5,7 +5,6 @@ import br.com.barbearia.dao.BarbeiroDAO;
 import br.com.barbearia.dao.ServicoDAO;
 import br.com.barbearia.model.Barbearia;
 import br.com.barbearia.model.Barbeiro;
-import br.com.barbearia.model.Plano;
 import br.com.barbearia.model.Servico;
 import br.com.barbearia.util.Param;
 import java.math.BigDecimal;
@@ -14,7 +13,7 @@ import java.time.LocalTime;
 import java.util.Set;
 import java.util.TreeSet;
 
-/** Regras do painel administrativo: barbeiros, servicos, configuracoes e plano. */
+/** Regras do painel administrativo: barbeiros, servicos e configuracoes. */
 public class GestaoService {
 
     private static final Set<Integer> INTERVALOS_VALIDOS = Set.of(10, 15, 20, 30, 45, 60);
@@ -27,7 +26,6 @@ public class GestaoService {
 
     public void adicionarBarbeiro(Barbearia b, String nome) throws RegraNegocioException, SQLException {
         String n = validarNomeBarbeiro(nome);
-        verificarLimitePlano(b);
         Barbeiro barbeiro = new Barbeiro();
         barbeiro.setBarbeariaId(b.getId());
         barbeiro.setNome(n);
@@ -43,7 +41,6 @@ public class GestaoService {
     public void ativarBarbeiro(Barbearia b, int id) throws RegraNegocioException, SQLException {
         Barbeiro barbeiro = exigirBarbeiro(b, id);
         if (!barbeiro.isAtivo()) {
-            verificarLimitePlano(b);
             barbeiroDAO.definirAtivo(id, b.getId(), true);
         }
     }
@@ -55,14 +52,6 @@ public class GestaoService {
                 throw new RegraNegocioException("A barbearia precisa ter pelo menos um barbeiro ativo.");
             }
             barbeiroDAO.definirAtivo(id, b.getId(), false);
-        }
-    }
-
-    private void verificarLimitePlano(Barbearia b) throws RegraNegocioException, SQLException {
-        Plano plano = b.getPlano();
-        if (barbeiroDAO.contarAtivos(b.getId()) >= plano.getLimiteBarbeiros()) {
-            throw new RegraNegocioException("O plano " + plano.getNome() + " permite até " + plano.getLimiteBarbeiros()
-                    + " barbeiros ativos. Mude para o plano Profissional para adicionar mais.");
         }
     }
 
@@ -189,21 +178,5 @@ public class GestaoService {
         b.setIntervaloMin(passo);
         b.setDiasFuncionamento(diasSelecionados);
         barbeariaDAO.atualizarHorarios(b);
-    }
-
-    // ---------- Plano (assinatura) ----------
-
-    public void alterarPlano(Barbearia b, String novoPlano) throws RegraNegocioException, SQLException {
-        Plano plano = Plano.deTexto(novoPlano);
-        if (plano == null) {
-            throw new RegraNegocioException("Plano inválido.");
-        }
-        int ativos = barbeiroDAO.contarAtivos(b.getId());
-        if (ativos > plano.getLimiteBarbeiros()) {
-            throw new RegraNegocioException("Você tem " + ativos + " barbeiros ativos e o plano " + plano.getNome()
-                    + " permite " + plano.getLimiteBarbeiros() + ". Desative barbeiros antes de mudar.");
-        }
-        barbeariaDAO.atualizarPlano(b.getId(), plano);
-        b.setPlano(plano);
     }
 }

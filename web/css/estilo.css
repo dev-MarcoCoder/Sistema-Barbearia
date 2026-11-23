@@ -465,7 +465,7 @@ input:focus, select:focus, textarea:focus {
     padding: 24px 14px;
     background: var(--superficie);
 }
-.admin-menu .barbearia-nome { font-weight: 700; padding: 0 10px; margin-bottom: 2px; }
+.admin-menu .barbearia-nome { font-weight: 700; padding: 0 10px; margin-bottom: 18px; }
 .admin-menu .plano-tag { padding: 0 10px; font-size: .8rem; color: var(--dourado-forte); margin-bottom: 20px; }
 .admin-menu nav { display: flex; flex-direction: column; gap: 2px; }
 .admin-menu nav a {

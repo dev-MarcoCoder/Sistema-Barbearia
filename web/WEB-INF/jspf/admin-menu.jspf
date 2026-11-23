@@ -23,13 +23,12 @@
 <div class="admin">
     <aside class="admin-menu">
         <div class="barbearia-nome"><%= Html.esc(barbearia.getNome()) %></div>
-        <div class="plano-tag">Plano <%= Html.esc(barbearia.getPlano().getNome()) %></div>
         <nav aria-label="Painel">
             <%= itemMenu(ctx, "painel", paginaAtiva, "📅", "Agenda") %>
             <%= itemMenu(ctx, "relatorios", paginaAtiva, "📊", "Relatórios") %>
             <%= itemMenu(ctx, "servicos", paginaAtiva, "✂", "Serviços") %>
             <%= itemMenu(ctx, "barbeiros", paginaAtiva, "💈", "Barbeiros") %>
-            <%= itemMenu(ctx, "configuracoes", "plano".equals(paginaAtiva) ? "configuracoes" : paginaAtiva, "⚙", "Configurações") %>
+            <%= itemMenu(ctx, "configuracoes", paginaAtiva, "⚙", "Configurações") %>
         </nav>
     </aside>
     <main class="admin-conteudo">
