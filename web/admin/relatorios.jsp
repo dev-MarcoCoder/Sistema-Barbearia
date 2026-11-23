@@ -63,13 +63,13 @@
     <div class="stat"><div class="stat-rotulo">Atendimentos concluídos</div><div class="stat-valor"><%= resumo.getConcluidos() %></div></div>
     <div class="stat"><div class="stat-rotulo">Ticket médio</div><div class="stat-valor"><%= Formato.moeda(resumo.getTicketMedio()) %></div></div>
     <div class="stat"><div class="stat-rotulo">Taxa de faltas</div><div class="stat-valor"><%= resumo.getTaxaFaltas() %>%</div>
-        <div class="suave pequeno"><%= resumo.getFaltas() %> faltas · <%= resumo.getCancelados() %> cancelamentos</div></div>
+        <div class="suave pequeno"><%= Formato.plural(resumo.getFaltas(), "falta", "faltas") %> · <%= Formato.plural(resumo.getCancelados(), "cancelamento", "cancelamentos") %></div></div>
 </div>
 
 <div class="card">
     <div class="card-titulo">
         <h3>Faturamento por dia</h3>
-        <span class="suave pequeno"><%= resumo.getAgendados() %> atendimentos ainda agendados no mês · previsto <%= Formato.moeda(resumo.getPrevisto()) %></span>
+        <span class="suave pequeno"><%= Formato.plural(resumo.getAgendados(), "atendimento ainda agendado", "atendimentos ainda agendados") %> no mês · previsto <%= Formato.moeda(resumo.getPrevisto()) %></span>
     </div>
     <div class="barras" role="img" aria-label="Gráfico de faturamento por dia do mês">
         <% for (LocalDate d = inicio; !d.isAfter(fim); d = d.plusDays(1)) {
@@ -112,7 +112,7 @@
             <div style="margin-bottom:14px">
                 <div style="display:flex;justify-content:space-between;gap:12px">
                     <strong><%= Html.esc(item.getNome()) %></strong>
-                    <span><%= Formato.moeda(item.getValor()) %> <span class="suave pequeno">· <%= item.getQuantidade() %> atend.</span></span>
+                    <span><%= Formato.moeda(item.getValor()) %> <span class="suave pequeno">· <%= Formato.plural(item.getQuantidade(), "atendimento", "atendimentos") %></span></span>
                 </div>
                 <div class="progresso"><div style="width:<%= pct %>%"></div></div>
             </div>

@@ -128,8 +128,12 @@
         <div>
             <div class="agenda-cliente"><%= Html.esc(a.getClienteNome()) %></div>
             <div class="agenda-detalhe"><%= Html.esc(a.getServicoNome()) %> · <%= Html.esc(a.getBarbeiroNome()) %> · <%= Formato.moeda(a.getValor()) %></div>
+            <% if (a.getStatus() == StatusAgendamento.AGENDADO) { %>
             <a class="pequeno" href="https://wa.me/55<%= Html.esc(a.getClienteTelefone()) %>?text=<%= Html.url(lembrete) %>" target="_blank" rel="noopener"
                title="Enviar lembrete pelo WhatsApp">WhatsApp <%= Html.esc(Formato.telefone(a.getClienteTelefone())) %></a>
+            <% } else { %>
+            <span class="pequeno suave"><%= Html.esc(Formato.telefone(a.getClienteTelefone())) %></span>
+            <% } %>
         </div>
         <div class="agenda-acoes">
             <span class="badge badge-<%= a.getStatus().name().toLowerCase() %>"><%= Html.esc(a.getStatus().getDescricao()) %></span>

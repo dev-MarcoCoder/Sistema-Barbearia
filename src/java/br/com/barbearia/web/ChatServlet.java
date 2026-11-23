@@ -14,7 +14,9 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,7 +25,7 @@ import java.util.logging.Logger;
  * Endpoint do chat: POST /chat com os parametros b (barbearia) e mensagem.
  * Responde em JSON: { ok, resposta, agendamento }.
  *
- * Cada navegador tem a sua conversa (sessao do Managed Agents), guardada na HttpSession
+ * Cada navegador tem a sua conversa (o historico de mensagens com a IA), guardada na HttpSession
  * e separada por barbearia.
  */
 @WebServlet(urlPatterns = "/chat")
@@ -82,7 +84,7 @@ public class ChatServlet extends HttpServlet {
             return;
         }
 
-        // Uma mensagem por vez em cada navegador (a sessao da IA processa em ordem)
+        // Uma mensagem por vez em cada navegador (o historico precisa ficar em ordem)
         synchronized (trava(sessao)) {
             Integer contador = (Integer) sessao.getAttribute(chaveContador);
             int enviadas = contador == null ? 0 : contador;
@@ -93,12 +95,13 @@ public class ChatServlet extends HttpServlet {
             sessao.setAttribute(chaveContador, enviadas + 1);
 
             try {
-                String sessaoIA = (String) sessao.getAttribute(chaveSessao);
-                if (sessaoIA == null) {
-                    sessaoIA = assistente.novaSessao(barbearia);
-                    sessao.setAttribute(chaveSessao, sessaoIA);
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> historico = (List<Map<String, Object>>) sessao.getAttribute(chaveSessao);
+                if (historico == null) {
+                    historico = new ArrayList<>();
                 }
-                AssistenteIA.Resposta r = assistente.conversar(sessaoIA, barbearia, mensagem);
+                AssistenteIA.Resposta r = assistente.conversar(historico, barbearia, mensagem);
+                sessao.setAttribute(chaveSessao, historico); // regrava para o Tomcat saber que mudou
                 if (r.sessaoEncerrada) {
                     sessao.removeAttribute(chaveSessao); // a proxima mensagem abre uma conversa nova
                 }

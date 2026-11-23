@@ -72,7 +72,8 @@
         </div>
         <div class="campo">
             <span class="rotulo">Link de agendamento</span>
-            <span class="suave pequeno"><%= Html.esc(ctx) %>/agendar.jsp?b=<strong><%= Html.esc(barbearia.getSlug()) %></strong></span>
+            <% String portaLink = (request.getServerPort() == 80 || request.getServerPort() == 443) ? "" : ":" + request.getServerPort(); %>
+            <span class="suave pequeno"><%= Html.esc(request.getScheme() + "://" + request.getServerName() + portaLink + ctx) %>/agendar.jsp?b=<strong><%= Html.esc(barbearia.getSlug()) %></strong></span>
         </div>
         <button class="btn btn-primario" type="submit">Salvar dados</button>
     </form>

@@ -1,0 +1,9 @@
+build/
+dist/
+nbproject/
+docs/
+.git/
+.env
+*.war
+web/WEB-INF/db.properties
+web/WEB-INF/ia.properties
