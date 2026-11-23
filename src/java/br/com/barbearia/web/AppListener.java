@@ -23,6 +23,10 @@ public class AppListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent evento) {
         ServletContext contexto = evento.getServletContext();
         try (InputStream entrada = contexto.getResourceAsStream("/WEB-INF/db.properties")) {
+            if (entrada == null && configurarPorAmbiente(contexto)) {
+                carregarConfigIA(contexto);
+                return;
+            }
             if (entrada == null) {
                 registrarErro(contexto, "Arquivo /WEB-INF/db.properties não encontrado. "
                         + "Copie db.properties.example para db.properties e preencha os dados do MySQL.");
@@ -36,6 +40,29 @@ public class AppListener implements ServletContextListener {
             registrarErro(contexto, "Não foi possível configurar o banco: " + e.getMessage());
         }
         carregarConfigIA(contexto);
+    }
+
+    /**
+     * Na nuvem (Docker/AWS) o banco e configurado pelas variaveis de ambiente
+     * DB_URL, DB_USUARIO e DB_SENHA, em vez do arquivo db.properties.
+     */
+    private boolean configurarPorAmbiente(ServletContext contexto) throws ClassNotFoundException {
+        String url = System.getenv("DB_URL");
+        if (url == null || url.isBlank()) {
+            return false;
+        }
+        Properties config = new Properties();
+        config.setProperty("db.driver", "com.mysql.cj.jdbc.Driver");
+        config.setProperty("db.url", url.trim());
+        config.setProperty("db.usuario", valorOuVazio(System.getenv("DB_USUARIO")));
+        config.setProperty("db.senha", valorOuVazio(System.getenv("DB_SENHA")));
+        ConnectionFactory.configurar(config);
+        contexto.log("BarberAgenda: conexão com o banco configurada pelas variáveis de ambiente.");
+        return true;
+    }
+
+    private static String valorOuVazio(String valor) {
+        return valor == null ? "" : valor;
     }
 
     /** Le a chave da API da Anthropic de /WEB-INF/ia.properties (opcional). */

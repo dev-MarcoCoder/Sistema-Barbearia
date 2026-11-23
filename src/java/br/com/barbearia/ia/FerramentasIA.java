@@ -10,9 +10,6 @@ import br.com.barbearia.service.AgendaService;
 import br.com.barbearia.service.RegraNegocioException;
 import br.com.barbearia.util.Formato;
 import br.com.barbearia.util.Param;
-import com.anthropic.core.JsonValue;
-import com.anthropic.models.beta.agents.BetaManagedAgentsCustomToolInputSchema;
-import com.anthropic.models.beta.agents.BetaManagedAgentsCustomToolParams;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -24,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Ferramentas que o assistente de IA pode usar ("custom tools" do Managed Agents).
+ * Ferramentas que o assistente de IA pode usar (function calling, via OpenRouter).
  *
  * A IA so decide QUAL ferramenta chamar e com quais dados. Quem executa e o nosso servidor,
  * reaproveitando as mesmas regras de negocio da pagina (AgendaService). Por isso a IA nao consegue
@@ -88,33 +85,27 @@ public final class FerramentasIA {
                     .param("codigo", "string", "Código do agendamento.", true)
     );
 
-    /** Converte as definicoes para o formato do SDK (usado ao criar/atualizar o agente). */
-    static List<BetaManagedAgentsCustomToolParams> paraAgente() {
-        List<BetaManagedAgentsCustomToolParams> lista = new ArrayList<>();
-        for (Ferramenta f : TODAS) {
-            BetaManagedAgentsCustomToolInputSchema.Properties.Builder props =
-                    BetaManagedAgentsCustomToolInputSchema.Properties.builder();
-            f.propriedades.forEach((nome, schema) -> props.putAdditionalProperty(nome, JsonValue.from(schema)));
-            lista.add(BetaManagedAgentsCustomToolParams.builder()
-                    .name(f.nome)
-                    .description(f.descricao)
-                    .inputSchema(BetaManagedAgentsCustomToolInputSchema.builder()
-                            .properties(props.build())
-                            .required(f.obrigatorios)
-                            .build())
-                    .build());
-        }
-        return lista;
+    private static final List<Map<String, Object>> FORMATO_OPENROUTER = montarFormatoOpenRouter();
+
+    /** As ferramentas no formato "tools" da API Chat Completions (OpenRouter). */
+    static List<Map<String, Object>> paraOpenRouter() {
+        return FORMATO_OPENROUTER;
     }
 
-    /** Texto que resume as ferramentas, usado para saber se o agente salvo precisa ser atualizado. */
-    static String assinatura() {
-        StringBuilder sb = new StringBuilder();
+    private static List<Map<String, Object>> montarFormatoOpenRouter() {
+        List<Map<String, Object>> lista = new ArrayList<>();
         for (Ferramenta f : TODAS) {
-            sb.append(f.nome).append('|').append(f.descricao).append('|').append(f.propriedades).append('|')
-                    .append(f.obrigatorios).append('\n');
+            Map<String, Object> parametros = new LinkedHashMap<>();
+            parametros.put("type", "object");
+            parametros.put("properties", f.propriedades);
+            parametros.put("required", f.obrigatorios);
+            Map<String, Object> funcao = new LinkedHashMap<>();
+            funcao.put("name", f.nome);
+            funcao.put("description", f.descricao);
+            funcao.put("parameters", parametros);
+            lista.add(Map.of("type", "function", "function", funcao));
         }
-        return sb.toString();
+        return List.copyOf(lista);
     }
 
     /** Resultado de uma ferramenta: texto (JSON) devolvido para a IA. */
@@ -144,7 +135,7 @@ public final class FerramentasIA {
     }
 
     /** Executa a ferramenta pedida pela IA, sempre dentro da barbearia desta conversa. */
-    public static Resultado executar(String nome, Map<String, JsonValue> entrada, Barbearia barbearia) {
+    public static Resultado executar(String nome, Map<String, Object> entrada, Barbearia barbearia) {
         try {
             switch (nome) {
                 case "ver_barbearia":
@@ -214,7 +205,7 @@ public final class FerramentasIA {
         return ok(Map.of("barbeiros", lista));
     }
 
-    private static Resultado verHorarios(Barbearia b, Map<String, JsonValue> entrada)
+    private static Resultado verHorarios(Barbearia b, Map<String, Object> entrada)
             throws SQLException, RegraNegocioException {
         Servico servico = new ServicoDAO().buscar(inteiro(entrada, "servico_id"), b.getId());
         if (servico == null || !servico.isAtivo()) {
@@ -261,7 +252,7 @@ public final class FerramentasIA {
         return ok(dados);
     }
 
-    private static Resultado criarAgendamento(Barbearia b, Map<String, JsonValue> entrada)
+    private static Resultado criarAgendamento(Barbearia b, Map<String, Object> entrada)
             throws SQLException, RegraNegocioException {
         Agendamento a = new AgendaService().agendar(b,
                 inteiro(entrada, "servico_id"),
@@ -274,7 +265,7 @@ public final class FerramentasIA {
         return new Resultado(r.texto, false, a.getCodigo());
     }
 
-    private static Resultado consultar(Barbearia b, Map<String, JsonValue> entrada) throws SQLException {
+    private static Resultado consultar(Barbearia b, Map<String, Object> entrada) throws SQLException {
         Agendamento a = new AgendaService().buscarPorCodigo(b, texto(entrada, "codigo"));
         if (a == null) {
             return erro("Nenhum agendamento com esse código nesta barbearia.");
@@ -284,7 +275,7 @@ public final class FerramentasIA {
         return ok(dados);
     }
 
-    private static Resultado cancelar(Barbearia b, Map<String, JsonValue> entrada)
+    private static Resultado cancelar(Barbearia b, Map<String, Object> entrada)
             throws SQLException, RegraNegocioException {
         Agendamento a = new AgendaService().cancelarPeloCliente(b, texto(entrada, "codigo"));
         return ok(descrever(a));
@@ -306,19 +297,11 @@ public final class FerramentasIA {
     // ------------------------------------------------------------------ leitura dos parametros
 
     /** Le um parametro como texto, aceitando que a IA mande numero ou texto. */
-    private static Object bruto(Map<String, JsonValue> entrada, String chave) {
-        JsonValue valor = entrada == null ? null : entrada.get(chave);
-        if (valor == null) {
-            return null;
-        }
-        try {
-            return valor.convert(Object.class);
-        } catch (RuntimeException e) {
-            return null;
-        }
+    private static Object bruto(Map<String, Object> entrada, String chave) {
+        return entrada == null ? null : entrada.get(chave);
     }
 
-    private static String texto(Map<String, JsonValue> entrada, String chave) {
+    private static String texto(Map<String, Object> entrada, String chave) {
         Object valor = bruto(entrada, chave);
         if (valor instanceof Number) {
             return String.valueOf(((Number) valor).longValue());
@@ -326,7 +309,7 @@ public final class FerramentasIA {
         return valor == null ? null : valor.toString().trim();
     }
 
-    private static int inteiro(Map<String, JsonValue> entrada, String chave) {
+    private static int inteiro(Map<String, Object> entrada, String chave) {
         Object valor = bruto(entrada, chave);
         if (valor instanceof Number) {
             return ((Number) valor).intValue();

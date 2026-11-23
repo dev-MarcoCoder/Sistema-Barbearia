@@ -1,50 +1,44 @@
 package br.com.barbearia.ia;
 
-import br.com.barbearia.dao.ConfigIADAO;
 import br.com.barbearia.model.Barbearia;
 import br.com.barbearia.util.Formato;
-import com.anthropic.client.AnthropicClient;
-import com.anthropic.client.okhttp.AnthropicOkHttpClient;
-import com.anthropic.models.beta.agents.AgentCreateParams;
-import com.anthropic.models.beta.agents.AgentUpdateParams;
-import com.anthropic.models.beta.agents.BetaManagedAgentsAgent;
-import com.anthropic.models.beta.agents.BetaManagedAgentsCustomToolParams;
-import com.anthropic.models.beta.agents.BetaManagedAgentsModel;
-import com.anthropic.models.beta.environments.BetaCloudConfigParams;
-import com.anthropic.models.beta.environments.BetaLimitedNetworkParams;
-import com.anthropic.models.beta.environments.EnvironmentCreateParams;
-import com.anthropic.models.beta.sessions.SessionCreateParams;
-import com.anthropic.models.beta.sessions.events.BetaManagedAgentsAgentCustomToolUseEvent;
-import com.anthropic.models.beta.sessions.events.BetaManagedAgentsSessionStatusIdleEvent;
-import com.anthropic.models.beta.sessions.events.BetaManagedAgentsStreamSessionEvents;
-import com.anthropic.models.beta.sessions.events.BetaManagedAgentsUserCustomToolResultEventParams;
-import com.anthropic.models.beta.sessions.events.BetaManagedAgentsUserMessageEventParams;
-import com.anthropic.models.beta.sessions.events.EventSendParams;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.sql.SQLException;
+import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HexFormat;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Assistente de agendamento com IA, usando o Managed Agents da Anthropic.
+ * Assistente de agendamento com IA, usando o OpenRouter (API no formato Chat Completions).
  *
  * Como funciona:
- * 1. O AGENTE (modelo, instrucoes e ferramentas) e criado uma unica vez na Anthropic; o ID fica no banco.
- * 2. Cada conversa do site abre uma SESSAO desse agente.
- * 3. A cada mensagem, o servidor envia o texto para a sessao e acompanha os eventos:
- *    quando a IA pede uma ferramenta (agent.custom_tool_use), o servidor executa no nosso banco
- *    e devolve o resultado (user.custom_tool_result); quando a IA termina, a resposta vai para o site.
+ * 1. O historico da conversa fica na sessao do site (HttpSession), uma lista de mensagens.
+ * 2. A cada mensagem do cliente, o servidor manda o historico + as ferramentas para o modelo.
+ * 3. Quando o modelo pede ferramentas (tool_calls), o servidor executa no nosso banco,
+ *    devolve os resultados (mensagens role "tool") e chama o modelo de novo,
+ *    ate ele responder com texto para o cliente.
  */
 public final class AssistenteIA {
 
     private static final Logger LOG = Logger.getLogger(AssistenteIA.class.getName());
+    private static final ObjectMapper JSON = new ObjectMapper();
+    private static final URI ENDPOINT = URI.create("https://openrouter.ai/api/v1/chat/completions");
 
-    static final String MODELO = "claude-opus-5-5";
-    /** Tempo maximo de espera por uma resposta antes de desistir. */
-    private static final long LIMITE_MS = 120_000;
+    /** Maximo de idas e voltas com ferramentas em uma unica resposta. */
+    private static final int MAX_RODADAS = 8;
+    /** Tamanho maximo de cada resposta do modelo (mensagens curtas, estilo WhatsApp). */
+    private static final int MAX_TOKENS = 1024;
 
     static final String INSTRUCOES = String.join("\n",
             "Você é o assistente de agendamento de uma barbearia que usa o BarberAgenda. Você conversa com os clientes",
@@ -73,12 +67,13 @@ public final class AssistenteIA {
 
     private static volatile AssistenteIA instancia;
 
-    private final AnthropicClient client;
-    private volatile String agenteId;
-    private volatile String ambienteId;
+    private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).build();
+    private final String chave;
+    private final String modelo;
 
-    private AssistenteIA(String chave) {
-        this.client = AnthropicOkHttpClient.builder().apiKey(chave).build();
+    private AssistenteIA(String chave, String modelo) {
+        this.chave = chave;
+        this.modelo = modelo;
     }
 
     /** Retorna o assistente, ou null se a chave da API nao foi configurada. */
@@ -89,7 +84,8 @@ public final class AssistenteIA {
         if (instancia == null) {
             synchronized (AssistenteIA.class) {
                 if (instancia == null) {
-                    instancia = new AssistenteIA(ConfigIA.chave());
+                    instancia = new AssistenteIA(ConfigIA.chave(), ConfigIA.modelo());
+                    LOG.info("BarberAgenda: assistente usando o modelo " + ConfigIA.modelo() + " (OpenRouter).");
                 }
             }
         }
@@ -101,7 +97,7 @@ public final class AssistenteIA {
         public final String texto;
         /** Codigo do agendamento criado neste turno (ou null). */
         public final String codigoCriado;
-        /** true quando a sessao nao pode mais ser usada e uma nova deve ser aberta. */
+        /** true quando a conversa deve ser descartada e uma nova comecar. */
         public final boolean sessaoEncerrada;
 
         Resposta(String texto, String codigoCriado, boolean sessaoEncerrada) {
@@ -111,168 +107,129 @@ public final class AssistenteIA {
         }
     }
 
-    // ------------------------------------------------------------------ configuracao (uma vez)
-
     /**
-     * Garante que o agente e o ambiente existem na Anthropic.
-     * Cria na primeira vez e guarda os IDs no banco; se as instrucoes ou ferramentas mudarem,
-     * atualiza o agente (gera uma nova versao) em vez de criar outro.
+     * Envia a mensagem do cliente e conversa com o modelo ate ele terminar de responder,
+     * executando as ferramentas que ele pedir. O historico recebido e atualizado no lugar;
+     * se algo falhar no meio, ele volta ao estado de antes desta mensagem.
      */
-    private synchronized void prepararAgente() throws SQLException {
-        if (agenteId != null && ambienteId != null) {
-            return;
-        }
-        ConfigIADAO config = new ConfigIADAO();
-        String assinatura = sha256(MODELO + "\n" + INSTRUCOES + "\n" + FerramentasIA.assinatura());
-
-        String id = config.ler("agente_id");
-        if (id == null) {
-            AgentCreateParams.Builder novo = AgentCreateParams.builder()
-                    .name("BarberAgenda - assistente de agendamento")
-                    .model(BetaManagedAgentsModel.of(MODELO))
-                    .system(INSTRUCOES);
-            for (BetaManagedAgentsCustomToolParams f : FerramentasIA.paraAgente()) {
-                novo.addTool(f);
-            }
-            id = client.beta().agents().create(novo.build()).id();
-            config.salvar("agente_id", id);
-            config.salvar("agente_assinatura", assinatura);
-            LOG.info("BarberAgenda: agente criado na Anthropic: " + id);
-        } else if (!assinatura.equals(config.ler("agente_assinatura"))) {
-            BetaManagedAgentsAgent atual = client.beta().agents().retrieve(id);
-            AgentUpdateParams.Builder mudanca = AgentUpdateParams.builder()
-                    .version(atual.version())
-                    .model(BetaManagedAgentsModel.of(MODELO))
-                    .system(INSTRUCOES);
-            for (BetaManagedAgentsCustomToolParams f : FerramentasIA.paraAgente()) {
-                mudanca.addTool(f);
-            }
-            client.beta().agents().update(id, mudanca.build());
-            config.salvar("agente_assinatura", assinatura);
-            LOG.info("BarberAgenda: agente atualizado na Anthropic: " + id);
-        }
-
-        String ambiente = config.ler("ambiente_id");
-        if (ambiente == null) {
-            ambiente = client.beta().environments().create(EnvironmentCreateParams.builder()
-                    .name("barberagenda-chat")
-                    .config(BetaCloudConfigParams.builder()
-                            .networking(BetaLimitedNetworkParams.builder()
-                                    .allowPackageManagers(false)
-                                    .allowMcpServers(false)
-                                    .build())
-                            .build())
-                    .build()).id();
-            config.salvar("ambiente_id", ambiente);
-            LOG.info("BarberAgenda: ambiente criado na Anthropic: " + ambiente);
-        }
-
-        this.agenteId = id;
-        this.ambienteId = ambiente;
-    }
-
-    // ------------------------------------------------------------------ conversa
-
-    /** Abre uma nova sessao (uma conversa) para um cliente da barbearia. */
-    public String novaSessao(Barbearia barbearia) throws SQLException {
-        prepararAgente();
-        return client.beta().sessions().create(SessionCreateParams.builder()
-                .agent(agenteId)
-                .environmentId(ambienteId)
-                .title("Chat - " + barbearia.getNome())
-                .build()).id();
-    }
-
-    /**
-     * Envia a mensagem do cliente e acompanha a sessao ate a IA terminar de responder,
-     * executando as ferramentas que ela pedir.
-     */
-    public Resposta conversar(String sessaoId, Barbearia barbearia, String mensagem) {
+    public Resposta conversar(List<Map<String, Object>> historico, Barbearia barbearia, String mensagem) {
+        int tamanhoAntes = historico.size();
         LocalDateTime agora = LocalDateTime.now();
         String contexto = "[site: agora é " + Formato.dataExtenso(agora.toLocalDate()) + " de " + agora.getYear()
                 + ", " + Formato.hora(agora.toLocalTime()) + "]\n";
+        historico.add(mensagem("user", contexto + mensagem));
 
-        StringBuilder texto = new StringBuilder();
         String codigoCriado = null;
-        boolean encerrada = false;
-        boolean comecou = false;
-        long limite = System.currentTimeMillis() + LIMITE_MS;
+        try {
+            for (int rodada = 0; rodada < MAX_RODADAS; rodada++) {
+                JsonNode resposta = chamarModelo(historico);
+                JsonNode escolha = resposta.path("choices").path(0);
+                JsonNode msg = escolha.path("message");
+                if (msg.isMissingNode()) {
+                    throw new IllegalStateException("Resposta sem mensagem: " + resumir(resposta.toString()));
+                }
 
-        // Abre o stream ANTES de enviar a mensagem, para nao perder nenhum evento
-        try (var stream = client.beta().sessions().events().streamStreaming(sessaoId)) {
-            client.beta().sessions().events().send(sessaoId, EventSendParams.builder()
-                    .addEvent(BetaManagedAgentsUserMessageEventParams.builder()
-                            .addTextContent(contexto + mensagem)
-                            .build())
-                    .build());
+                // Guarda a mensagem do modelo inteira (inclui tool_calls e reasoning_details,
+                // que precisam voltar iguais na proxima chamada)
+                Map<String, Object> doModelo = JSON.convertValue(msg, new TypeReference<LinkedHashMap<String, Object>>() { });
+                doModelo.values().removeIf(v -> v == null);
+                historico.add(doModelo);
 
-            for (BetaManagedAgentsStreamSessionEvents evento : stream) {
-                if (evento.isUserMessage() || evento.isSessionStatusRunning()) {
-                    comecou = true;
-                } else if (evento.isAgentMessage()) {
-                    comecou = true;
-                    evento.asAgentMessage().content().forEach(bloco -> bloco.text().ifPresent(t -> {
-                        if (texto.length() > 0) {
-                            texto.append("\n\n");
-                        }
-                        texto.append(t.text().trim());
-                    }));
-                } else if (evento.isAgentCustomToolUse()) {
-                    comecou = true;
-                    BetaManagedAgentsAgentCustomToolUseEvent chamada = evento.asAgentCustomToolUse();
-                    FerramentasIA.Resultado r = FerramentasIA.executar(
-                            chamada.name(), chamada.input()._additionalProperties(), barbearia);
+                JsonNode chamadas = msg.path("tool_calls");
+                if (!chamadas.isArray() || chamadas.isEmpty()) {
+                    String texto = msg.path("content").asText("").trim();
+                    if ("content_filter".equals(escolha.path("finish_reason").asText())) {
+                        texto = "Desculpe, não posso ajudar com isso. Posso marcar, consultar ou cancelar um horário?";
+                    }
+                    if (texto.isEmpty()) {
+                        texto = codigoCriado != null
+                                ? "Pronto! Seu horário foi marcado. Código: **" + codigoCriado + "**."
+                                : "Desculpe, não consegui responder agora. Pode repetir a mensagem?";
+                    }
+                    return new Resposta(texto, codigoCriado, false);
+                }
+
+                for (JsonNode chamada : chamadas) {
+                    String nome = chamada.path("function").path("name").asText();
+                    Map<String, Object> argumentos = lerArgumentos(chamada.path("function").path("arguments").asText("{}"));
+                    FerramentasIA.Resultado r = FerramentasIA.executar(nome, argumentos, barbearia);
                     if (r.codigoCriado != null) {
                         codigoCriado = r.codigoCriado;
                     }
-                    client.beta().sessions().events().send(sessaoId, EventSendParams.builder()
-                            .addEvent(BetaManagedAgentsUserCustomToolResultEventParams.builder()
-                                    .customToolUseId(chamada.id())
-                                    .addTextContent(r.texto)
-                                    .isError(r.erro)
-                                    .build())
-                            .build());
-                } else if (evento.isSessionStatusIdle() && comecou) {
-                    BetaManagedAgentsSessionStatusIdleEvent.StopReason motivo = evento.asSessionStatusIdle().stopReason();
-                    if (motivo.isRequiresAction()) {
-                        continue; // esperando o resultado de uma ferramenta que acabamos de enviar
-                    }
-                    if (motivo.isRefusal()) {
-                        texto.setLength(0);
-                        texto.append("Desculpe, não posso ajudar com isso. Posso marcar, consultar ou cancelar um horário?");
-                    }
-                    break;
-                } else if (evento.isSessionStatusTerminated()) {
-                    encerrada = true;
-                    break;
-                } else if (evento.isSessionError()) {
-                    LOG.warning("BarberAgenda: erro na sessao " + sessaoId + ": " + evento.asSessionError().error().message());
-                }
-                if (System.currentTimeMillis() > limite) {
-                    LOG.warning("BarberAgenda: tempo esgotado esperando a sessao " + sessaoId);
-                    encerrada = true;
-                    break;
+                    Map<String, Object> resultado = new LinkedHashMap<>();
+                    resultado.put("role", "tool");
+                    resultado.put("tool_call_id", chamada.path("id").asText());
+                    resultado.put("content", r.texto);
+                    historico.add(resultado);
                 }
             }
-        } catch (RuntimeException e) {
-            LOG.log(Level.WARNING, "BarberAgenda: falha ao conversar com a sessao " + sessaoId, e);
-            return new Resposta("Tive um problema para responder agora. Pode repetir a mensagem?", codigoCriado, true);
-        }
-
-        if (texto.length() == 0) {
-            texto.append(codigoCriado != null
+            LOG.warning("BarberAgenda: a IA passou do limite de " + MAX_RODADAS + " rodadas de ferramentas.");
+            return new Resposta(codigoCriado != null
                     ? "Pronto! Seu horário foi marcado. Código: **" + codigoCriado + "**."
-                    : "Desculpe, não consegui responder agora. Pode repetir a mensagem?");
+                    : "Desculpe, me enrolei aqui. Pode repetir o que você precisa?", codigoCriado, true);
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "BarberAgenda: falha ao conversar com a IA", e);
+            if (Thread.interrupted()) {
+                Thread.currentThread().interrupt();
+            }
+            historico.subList(tamanhoAntes, historico.size()).clear();
+            String texto = codigoCriado != null
+                    ? "Seu horário foi marcado. Código: **" + codigoCriado + "**."
+                    : "Tive um problema para responder agora. Pode repetir a mensagem?";
+            return new Resposta(texto, codigoCriado, codigoCriado != null);
         }
-        return new Resposta(texto.toString(), codigoCriado, encerrada);
     }
 
-    private static String sha256(String texto) {
-        try {
-            byte[] hash = MessageDigest.getInstance("SHA-256").digest(texto.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash);
-        } catch (Exception e) {
-            return Integer.toHexString(texto.hashCode());
+    // ------------------------------------------------------------------ chamada HTTP
+
+    private JsonNode chamarModelo(List<Map<String, Object>> historico) throws Exception {
+        List<Map<String, Object>> mensagens = new ArrayList<>(historico.size() + 1);
+        mensagens.add(mensagem("system", INSTRUCOES));
+        mensagens.addAll(historico);
+
+        Map<String, Object> corpo = new LinkedHashMap<>();
+        corpo.put("model", modelo);
+        corpo.put("messages", mensagens);
+        corpo.put("tools", FerramentasIA.paraOpenRouter());
+        corpo.put("max_tokens", MAX_TOKENS);
+
+        HttpRequest pedido = HttpRequest.newBuilder(ENDPOINT)
+                .timeout(Duration.ofSeconds(90))
+                .header("Authorization", "Bearer " + chave)
+                .header("Content-Type", "application/json")
+                .header("X-Title", "BarberAgenda")
+                .POST(HttpRequest.BodyPublishers.ofString(JSON.writeValueAsString(corpo), StandardCharsets.UTF_8))
+                .build();
+        HttpResponse<String> resposta = http.send(pedido, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        if (resposta.statusCode() != 200) {
+            throw new IllegalStateException("OpenRouter respondeu HTTP " + resposta.statusCode() + ": "
+                    + resumir(resposta.body()));
         }
+        JsonNode json = JSON.readTree(resposta.body());
+        if (json.has("error")) {
+            throw new IllegalStateException("OpenRouter devolveu erro: " + resumir(json.path("error").toString()));
+        }
+        return json;
+    }
+
+    private static Map<String, Object> lerArgumentos(String texto) {
+        try {
+            Map<String, Object> mapa = JSON.readValue(texto.isBlank() ? "{}" : texto,
+                    new TypeReference<LinkedHashMap<String, Object>>() { });
+            return mapa == null ? Map.of() : mapa;
+        } catch (Exception e) {
+            return Map.of();
+        }
+    }
+
+    private static Map<String, Object> mensagem(String papel, String texto) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("role", papel);
+        m.put("content", texto);
+        return m;
+    }
+
+    private static String resumir(String texto) {
+        return texto == null ? "" : texto.length() > 500 ? texto.substring(0, 500) + "..." : texto;
     }
 }

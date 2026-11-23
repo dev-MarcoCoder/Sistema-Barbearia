@@ -19,3 +19,7 @@ Thumbs.db
 # Configuração local do banco de dados e chave da API (não versionar)
 /web/WEB-INF/db.properties
 /web/WEB-INF/ia.properties
+
+# Segredos do deploy (Docker/AWS)
+.env
+*.tar.gz

@@ -1,0 +1,8 @@
+# Caddy: recebe as visitas (portas 80 e 443), cuida do HTTPS sozinho (certificado gratis do
+# Let's Encrypt, renovado automaticamente) e repassa para o Tomcat.
+# O endereco vem da variavel DOMINIO do .env (ex.: meubarberagenda.duckdns.org).
+# Sem DOMINIO, atende so por HTTP na porta 80.
+{$DOMINIO::80} {
+	encode gzip
+	reverse_proxy app:8080
+}

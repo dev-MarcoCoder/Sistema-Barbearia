@@ -64,8 +64,8 @@ por exemplo R$ 0,50, paga por Pix no fim do mês. No MVP, nenhuma cobrança é f
 - **Java 21** com **JSP** e Servlets (Jakarta EE 10): filtros e *listener*
 - **Apache Tomcat 10.1**
 - **MySQL 8** com JDBC (driver MySQL Connector/J, incluído em `web/WEB-INF/lib`)
-- **API da Anthropic (Managed Agents)** com o SDK Java oficial `anthropic-java` 3.12.0, incluído em `web/WEB-INF/lib`
-  com as dependências. O assistente usa o modelo Claude Opus 5.5.
+- **OpenRouter** (API no formato Chat Completions), chamado com o `HttpClient` do próprio Java e Jackson.
+  O assistente usa o modelo Claude Haiku 5.5 (`anthropic/claude-haiku-5.5`), o mais barato da Anthropic.
 - **HTML, CSS e JavaScript** puros, com layout responsivo para celular
 - **NetBeans** com Ant (`build.xml`)
 
@@ -140,7 +140,7 @@ db.senha=sua_senha
 ```
 
 ### 4. Ativar o assistente com IA (opcional)
-Crie uma chave em [console.anthropic.com](https://console.anthropic.com), no menu *API Keys*. Depois copie o modelo
+Crie uma chave em [openrouter.ai/settings/keys](https://openrouter.ai/settings/keys). Depois copie o modelo
 e cole a chave:
 
 ```bash
@@ -148,11 +148,11 @@ cp web/WEB-INF/ia.properties.example web/WEB-INF/ia.properties
 ```
 
 ```properties
-anthropic.api_key=sua_chave
+openrouter.api_key=sua_chave
 ```
 
 O `ia.properties` também está no `.gitignore`. Sem ele, o site funciona normalmente e o chat mostra um aviso.
-Na primeira conversa o sistema cria sozinho o agente e o ambiente na Anthropic e guarda os IDs na tabela `config_ia`.
+Para trocar de modelo, mude `openrouter.modelo` (ou a variável `OPENROUTER_MODEL` na nuvem).
 
 ### 5. Rodar
 No NetBeans: **File → Open Project**, escolha esta pasta, depois **Clean and Build** e **Run**.
@@ -169,22 +169,27 @@ Para testar sem cadastrar nada, rode também `database/dados-demonstracao.sql` *
 Ele cria duas barbearias fictícias, um mês de histórico e agendamentos para hoje e amanhã.
 Os logins de teste estão no começo do arquivo. Para começar do zero, não rode esse arquivo.
 
+### Publicar na nuvem (AWS)
+
+O projeto tem `Dockerfile` e `docker-compose.yml` (site + MySQL + Caddy para HTTPS). Na nuvem, o banco é configurado pelas variáveis
+`DB_URL`, `DB_USUARIO` e `DB_SENHA` e a IA por `OPENROUTER_API_KEY`, todas no arquivo `.env` do servidor.
+O sistema está no ar em **https://meubarberagenda.duckdns.org**. Servidor, custos e como publicar versões novas (`bash deploy/atualizar.sh`): [deploy/DEPLOY-AWS.md](deploy/DEPLOY-AWS.md).
+
 ## Assistente com IA
 
-O chat da página de agendamento conversa com um agente do **Managed Agents** da Anthropic.
+O chat da página de agendamento conversa com o Claude Haiku 5.5 pelo **OpenRouter** (formato Chat Completions).
 
-1. O **agente** (modelo, instruções e ferramentas) é criado uma única vez; se as instruções mudarem no código,
-   ele é atualizado e ganha uma nova versão.
-2. Cada conversa do site abre uma **sessão** desse agente.
-3. O `ChatServlet` envia a mensagem e acompanha os eventos da sessão. Quando a IA pede uma ferramenta
-   (`agent.custom_tool_use`), o servidor executa no MySQL e devolve o resultado (`user.custom_tool_result`).
+1. O histórico da conversa fica na sessão do navegador (`HttpSession`), separado por barbearia.
+2. A cada mensagem, o `ChatServlet` chama o `AssistenteIA`, que envia o histórico e as ferramentas para o modelo.
+3. Quando a IA pede uma ferramenta (`tool_calls`), o servidor executa no MySQL, devolve o resultado
+   (mensagem `role: "tool"`) e chama o modelo de novo, até ele responder com texto.
 
 Ferramentas disponíveis (`FerramentasIA`): `ver_barbearia`, `listar_servicos`, `listar_barbeiros`,
 `ver_horarios_livres`, `criar_agendamento`, `consultar_agendamento` e `cancelar_agendamento`.
 
 A IA só *pede* as ferramentas. Quem executa é o servidor, com as mesmas regras da página (`AgendaService`),
 e a barbearia vem da sessão do site, nunca do texto da conversa. Cada conversa aceita no máximo 40 mensagens.
-O uso da API é cobrado por tokens e por tempo de sessão; acompanhe o custo no Console da Anthropic.
+O uso da API é cobrado por tokens; acompanhe o custo em [openrouter.ai/activity](https://openrouter.ai/activity).
 
 ## Estrutura de pastas
 
@@ -195,7 +200,7 @@ src/java/br/com/barbearia/
   model/                         entidades e o enum StatusAgendamento
   dao/                           acesso a dados (JDBC)
   service/                       regras de negócio
-  ia/                            assistente com IA (Managed Agents) e as ferramentas que ele usa
+  ia/                            assistente com IA (OpenRouter) e as ferramentas que ele usa
   util/                          formatação, segurança, CSRF, mensagens
   web/                           filtros (login, UTF-8), listener de inicialização e ChatServlet
 web/
