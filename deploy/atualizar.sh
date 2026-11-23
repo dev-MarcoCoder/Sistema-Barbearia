@@ -15,4 +15,4 @@ scp -i "$CHAVE" -o BatchMode=yes -q barberagenda.tar.gz "$SERVIDOR":~/
 echo ">> Recompilando e reiniciando o site..."
 "${SSH[@]}" 'tar -xzf ~/barberagenda.tar.gz -C ~/barberagenda 2>/dev/null; cd ~/barberagenda && sudo docker compose up -d --build 2>&1 | tail -3 && sudo docker image prune -f >/dev/null'
 sleep 15
-curl -s -o /dev/null -w "Site respondeu HTTP %{http_code}\n" "http://${SERVIDOR#*@}/"
+curl -s -L -o /dev/null -w "Site respondeu HTTP %{http_code}\n" "https://meubarberagenda.duckdns.org/"

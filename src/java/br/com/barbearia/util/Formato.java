@@ -83,6 +83,11 @@ public final class Formato {
     }
 
     /** Formata apenas digitos: 11987654321 -> (11) 98765-4321 */
+    /** "1 falta", "3 faltas": escolhe singular ou plural pela quantidade. */
+    public static String plural(long quantidade, String singular, String plural) {
+        return quantidade + " " + (quantidade == 1 ? singular : plural);
+    }
+
     public static String telefone(String digitos) {
         if (digitos == null) {
             return "";

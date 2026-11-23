@@ -23,3 +23,6 @@ Thumbs.db
 # Segredos do deploy (Docker/AWS)
 .env
 *.tar.gz
+
+# Senhas das barbearias ficticias geradas por database/gerar-dados-exemplo.py
+*.local.txt

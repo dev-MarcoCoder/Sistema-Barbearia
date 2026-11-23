@@ -169,6 +169,16 @@ Para testar sem cadastrar nada, rode também `database/dados-demonstracao.sql` *
 Ele cria duas barbearias fictícias, um mês de histórico e agendamentos para hoje e amanhã.
 Os logins de teste estão no começo do arquivo. Para começar do zero, não rode esse arquivo.
 
+Para simular um site já bastante usado (10 barbearias, milhares de clientes e cerca de 4 meses de agendamentos,
+respeitando horários e sem sobreposição), use o gerador:
+
+```bash
+python3 database/gerar-dados-exemplo.py --logins database/logins-exemplo.local.txt > dados.sql
+mysql -u root -p barbearia < dados.sql
+```
+
+A senha dos donos fictícios fica só no arquivo `*.local.txt`, que não vai para o Git.
+
 ### Publicar na nuvem (AWS)
 
 O projeto tem `Dockerfile` e `docker-compose.yml` (site + MySQL + Caddy para HTTPS). Na nuvem, o banco é configurado pelas variáveis
